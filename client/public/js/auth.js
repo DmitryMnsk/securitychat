@@ -28,9 +28,15 @@ $(".logout-btn").on('click', e => {
 });
 
 $( document ).ready( () => {
-    var socket = io.connect('http://localhost:7777');
+    if (!location.pathname.substr(1)){
+        return;
+    }
+    var room = location.pathname.substr(1),
+        socket = io.connect('http://localhost:7777');
+
     socket.on('connected', function (msg) {
         console.log(msg);
+        socket.emit('join', room);
         socket.emit('receiveHistory');
     });
     socket.on('message', addMessage);
@@ -75,4 +81,8 @@ $( document ).ready( () => {
 
         $(".chat-history").animate({ scrollTop: $('.chat-history')[0].scrollHeight}, 1000);
     }
+
+    $( window ).unload(function() {
+        socket.emit('disconnect');
+    });
 });

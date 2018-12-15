@@ -1,14 +1,15 @@
 "user strict";
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const Mixed = mongoose.Mixed;
 //const {Schema} = require('mongoose');
 
 const MessageSchema = new Schema({
     date: {type: String},
-    content: {type: String},
+    content: {type: Mixed},
     username: {type: String}
 }, {
-    versionKey: false, // создание параметра __V при редактировании увеличивается
+    versionKey: false, // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ __V пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     collection: 'MessageCollection'
 });
 
