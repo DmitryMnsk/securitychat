@@ -13,7 +13,7 @@ module.exports = io => {
         });
         socket.on('disconnect', () => {
             console.log('disc');
-        })
+        });
         socket.on('leave', room => {
            socket.leave(room);
         });
@@ -34,13 +34,14 @@ module.exports = io => {
                 return;
             }
             const obj = {
+                room: room,
                 date: new Date(),
                 content: content,
                 username: socket.id
             };
-           /*��� ����������� ���� ��� ����
-            const model = new MessageModel(obj);
-            model.save();*/
+            /*Это равносильно тому что ниже
+             const model = new MessageModel(obj);
+             model.save();*/
             MessageModel.create(obj, err => {
                 if (err) return console.error("MessageModel", err);
                 socket.emit('message', obj);
@@ -50,11 +51,12 @@ module.exports = io => {
 
         socket.on('receiveHistory', room => {
             MessageModel
-                .find({})
+                .find({
+                    room: room
+                })
                 .sort({date: -1})
-                .limit(50)
                 .sort({date: 1})
-                .lean()     //������� ��������� �������� mongoose
+                .lean()     //убирает парамтры привязки mongoose
                 .exec((err, messages) => {
                     if (!err){
                         socket.emit('history', messages);

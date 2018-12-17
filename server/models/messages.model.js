@@ -6,10 +6,11 @@ const Mixed = mongoose.Mixed;
 
 const MessageSchema = new Schema({
     date: {type: String},
+    room: {type: String},
     content: {type: Mixed},
     username: {type: String}
 }, {
-    versionKey: false, // �������� ��������� __V ��� �������������� �������������
+    versionKey: false, // создание параметра __V при редактировании увеличивается
     collection: 'MessageCollection'
 });
 

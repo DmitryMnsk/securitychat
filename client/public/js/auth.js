@@ -37,7 +37,7 @@ $( document ).ready( () => {
     socket.on('connected', function (msg) {
         console.log(msg);
         socket.emit('join', room);
-        socket.emit('receiveHistory');
+        socket.emit('receiveHistory', room);
     });
     socket.on('message', addMessage);
 
@@ -54,7 +54,7 @@ $( document ).ready( () => {
         var messageContent = selector.val().trim();
         console.log(messageContent);
         if(messageContent !== '') {
-            socket.emit('msg', messageContent);
+            socket.emit('msg', messageContent, room);
             selector.val('');
         }
     });
@@ -81,7 +81,6 @@ $( document ).ready( () => {
 
         $(".chat-history").animate({ scrollTop: $('.chat-history')[0].scrollHeight}, 1000);
     }
-
     $( window ).unload(function() {
         socket.emit('disconnect');
     });
