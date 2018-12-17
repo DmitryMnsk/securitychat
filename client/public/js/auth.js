@@ -35,7 +35,6 @@ $( document ).ready( () => {
         socket = io.connect('http://localhost:7777');
 
     socket.on('connected', function (msg) {
-        console.log(msg);
         socket.emit('join', room);
         socket.emit('receiveHistory', room);
     });
@@ -47,17 +46,53 @@ $( document ).ready( () => {
         }
     });
 
-    $('.chat-message button').on('click', e => {
-        e.preventDefault();
-
-        var selector = $("textarea[name='message']");
-        var messageContent = selector.val().trim();
-        console.log(messageContent);
-        if(messageContent !== '') {
-            socket.emit('msg', messageContent, room);
-            selector.val('');
+    $('.chat-message button').on('click', sendMessage);
+    $('#inputfield').on('keyup', (e) => {
+        if (e.keyCode == 13) {
+            if (e.shiftKey) {
+                debugger
+            } else {
+                sendMessage(e);
+            }
         }
     });
+
+    function sendMessage (e) {
+
+        //$("#multifiles div").each
+        e.preventDefault();
+        var selector = $("textarea[name='message']"),
+            content,
+            type = 'text';
+
+        if (selector.data() && selector.data().type) {
+            var data = selector.data();
+            type = data.type;
+            switch (data.type) {
+                case 'img':
+                    content = {
+                        width: data.width,
+                        height: data.height,
+                        filename: data.filename,
+                        dataURL: data.dataURL
+                    };
+                    break;
+                default:
+                    content = selector.val().trim();
+            }
+        } else {
+            content = selector.val().trim();
+        }
+        if(!!content) {
+            socket.emit('msg', {
+                type: type,
+                content: content
+            }, room);
+            selector.val('');
+            selector.css({backgroundImage: 'none'});
+            selector.data({});
+        }
+    }
 
     function encodeHTML (str){
         return $('<div />').text(str).html();
@@ -66,7 +101,29 @@ $( document ).ready( () => {
     function addMessage(message) {
         message.date      = (new Date(message.date)).toLocaleString();
         message.username  = encodeHTML(message.username);
-        message.content   = encodeHTML(message.content);
+        if (message.type) {
+            switch (message.type) {
+                case 'img':
+                    if (typeof message.content == 'object') {
+                        var div = $("<div></div>").css({
+                            backgroundImage: "url(" + message.content.dataURL + ")",
+                            width: message.content.width,
+                            height: message.content.height
+                        });
+                        message.content = '' +
+                            '<a download="' + (message.filename || 'download')  + '" href="' + message.content.dataURL + '" target="_blank">' +
+                            'Скачать картинку' +
+                            '</a><br/>' + div.prop('outerHTML');
+                    } else {
+                        message.content = '';
+                    }
+                    break;
+                default:
+                    message.content = encodeHTML(message.content);
+            }
+        } else {
+            message.content = encodeHTML(message.content);
+        }
 
         var html = `
             <li>

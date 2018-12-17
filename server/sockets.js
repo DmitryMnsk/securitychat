@@ -29,14 +29,15 @@ module.exports = io => {
             });
         });
 
-        socket.on('msg', (content, room) => {
+        socket.on('msg', (message, room) => {
             if (!room) {
                 return;
             }
             const obj = {
                 room: room,
                 date: new Date(),
-                content: content,
+                content: message.content,
+                type: message.type || 'text',
                 username: socket.id
             };
             /*Это равносильно тому что ниже

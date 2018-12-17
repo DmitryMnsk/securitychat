@@ -7,6 +7,7 @@ const Mixed = mongoose.Mixed;
 const MessageSchema = new Schema({
     date: {type: String},
     room: {type: String},
+    type: {type: String},
     content: {type: Mixed},
     username: {type: String}
 }, {
