@@ -46,23 +46,35 @@ $( document ).ready( () => {
         }
     });
 
-    $('.chat-message button').on('click', sendMessage);
+    $('.chat-message button').on('click', send);
     $('#inputfield').on('keyup', (e) => {
         if (e.keyCode == 13) {
-            if (e.shiftKey) {
-                debugger
-            } else {
-                sendMessage(e);
+            if (!e.ctrlKey) {
+                send(e);
             }
         }
     });
 
-    function sendMessage (e) {
-
-        //$("#multifiles div").each
+    function send (e) {
         e.preventDefault();
-        var selector = $("textarea[name='message']"),
-            content,
+        if (!$("#multifiles").get(0).hidden) {
+            $("#multifiles div").each(function(i, img) {
+                sendMessage($(this), function () {
+                    this.remove();
+                });
+            });
+            $('#inputfield').show();
+            $('#multifiles').hide();
+        }
+
+        sendMessage($("textarea[name='message']"), function () {
+            this.val('');
+            this.css({backgroundImage: 'none'});
+        });
+    }
+
+    function sendMessage (selector, callback) {
+        var content,
             type = 'text';
 
         if (selector.data() && selector.data().type) {
@@ -88,8 +100,9 @@ $( document ).ready( () => {
                 type: type,
                 content: content
             }, room);
-            selector.val('');
-            selector.css({backgroundImage: 'none'});
+            if (typeof callback == 'function') {
+                callback.call(selector);
+            }
             selector.data({});
         }
     }

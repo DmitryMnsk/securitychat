@@ -71,7 +71,9 @@ function insertImgInBlock (element, results, scale) {
     $width.val(w);
     $height.val(h);
     var css = {
-        backgroundImage: "url(" + dataURL + ")"
+        backgroundImage: "url(" + dataURL + ")",
+        width: w,
+        height: h
     };
     if (scale) {
         css.width = w*scale + 'px';
@@ -155,6 +157,9 @@ function previewFile () {
                             name: f.name
                         }, 0.1));
                     });
+                    /*setTimeout(function () {
+
+                    }, 200);*/
                 }(file, span, insertImgInBlock);
             }
             $('#inputfield').hide();
