@@ -57,7 +57,7 @@ $( document ).ready( () => {
 
     function send (e) {
         e.preventDefault();
-        if (!$("#multifiles").get(0).hidden) {
+        if ($("#multifiles:visible").length) {
             $("#multifiles div").each(function(i, img) {
                 sendMessage($(this), function () {
                     this.remove();
@@ -65,12 +65,22 @@ $( document ).ready( () => {
             });
             $('#inputfield').show();
             $('#multifiles').hide();
+            return;
         }
 
         sendMessage($("textarea[name='message']"), function () {
             this.val('');
             this.css({backgroundImage: 'none'});
         });
+    }
+
+    function applyCrypt (text) {
+        debugger
+       /* let cryptoCode = $("input[name='code']").val().trim();
+        if (!cryptoCode) {
+            cryptoCode = location.pathname.substr(1);
+        }
+        return Crypto.AES.encrypt(text, cryptoCode)*/
     }
 
     function sendMessage (selector, callback) {
@@ -90,10 +100,10 @@ $( document ).ready( () => {
                     };
                     break;
                 default:
-                    content = selector.val().trim();
+                    content = applyCrypt(selector.val().trim());
             }
         } else {
-            content = selector.val().trim();
+            content = applyCrypt(selector.val().trim());
         }
         if(!!content) {
             socket.emit('msg', {

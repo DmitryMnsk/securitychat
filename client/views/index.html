@@ -8,6 +8,10 @@
     {% if not error %}
         <!--<script src='/vendor/socket.io-client/dist/socket.io.js'></script>-->
         <script src='/socket.io/socket.io.js'></script>
+    
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/aes.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/pbkdf2.min.js"></script>
     {% endif %}
 </head>
 <body>
@@ -50,10 +54,13 @@
                 </div>
 
                 <div class="chat-message clearfix">
-                    <textarea name="message" placeholder ="Type your message" rows="3" id="inputfield"></textarea>
+                    <textarea name="message" placeholder="Type your message" rows="3" id="inputfield"></textarea>
                     <div id="multifiles" style="width:100%; height: auto; display: none"></div>
                     <input type="file" onchange="previewFile()" id="file" multiple><br>
-                    <button type="submit">Send</button>
+                    <div>
+                        <input type="text" placeholder="Type your code" name="code"/>
+                        <button type="submit">Send</button>
+                    </div>
                 </div>
             </div>
         </div>
