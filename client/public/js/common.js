@@ -190,10 +190,7 @@ function previewFile () {
                                 name: f.name
                             }));
                         };
-                        img.src = _URL.createObjectURL(file);
-
-
-
+                        img.src = _URL.createObjectURL(f);
                     });
                 }(file, span, insertImgInBlock);
             }
