@@ -91,7 +91,19 @@ function insertImgInBlock (element, results, single) {
         defaultHeight: element.data('defaultHeight') || element.height(),
         defaultPlaceholder: element.data('defaultPlaceholder') || element.attr('placeholder')
     };
-    element.attr('placeholder', '');
+    if (single) {
+        element.val('');
+        element.attr('readOnly', true);
+        element.attr('placeholder', '');
+        $('.chat-message #clearTextArea').show();
+    } else {
+        css.position = 'relative';
+        var button = $('<span class="close"></span>');
+        button.on('click', function () {
+           element.remove();
+        });
+        element.append(button);
+    }
     return element
         .css(css)
         .data(data);
@@ -104,7 +116,7 @@ $(function() {
     $type = $(".type");
     $width = $("#width");
     $height = $("#height");
-    $("#inputfield").on("click", function() {
+   /* $("#inputfield").on("click", function() {
         var $this = $(this);
         var bi = $this.css("background-image");
         if (bi != "none") {
@@ -127,7 +139,7 @@ $(function() {
         } else {
             $this.css({ width: "", height: "", "z-index": "" });
         }
-    });
+    });*/
 });
 
 function copy(text) {

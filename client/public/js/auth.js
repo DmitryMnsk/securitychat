@@ -49,6 +49,17 @@ $( document ).ready( () => {
     });
 
     $('.chat-message button#submit').on('click', send);
+    $('.chat-message span#clearTextArea').on('click', function (e) {
+      var textarea = $("textarea[name='message']"),
+          data = textarea.data();
+        textarea.height(data.defaultHeight || 'auto');
+        textarea.attr('placeholder', data.defaultPlaceholder || '');
+        textarea.attr('readOnly', false);
+        textarea.removeData();
+        textarea.css({backgroundImage: 'none'});
+            $(this).hide();
+        });
+
     $('.chat-message button#applyCode').on('click', applyCode);
     $("input[name='code']").on('keyup', (e) => {
         if (e.keyCode == 13) {
@@ -97,8 +108,10 @@ $( document ).ready( () => {
             var data = this.data();
             this.height(data.defaultHeight || 'auto');
             this.attr('placeholder', data.defaultPlaceholder || '');
+            this.attr('readOnly', false);
             this.removeData();
             this.css({backgroundImage: 'none'});
+            $('.chat-message span#clearTextArea').hide();
         });
     }
 

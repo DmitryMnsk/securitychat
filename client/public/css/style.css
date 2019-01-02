@@ -104,15 +104,14 @@ body {
     font-size: 80%;
 }
 .chat .chat-history .message {
-    color: white;
-    padding: 18px 20px;
+    color: black;
     line-height: 26px;
     font-size: 16px;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     /*width: 90%;*/
     position: relative;
 }
-.chat .chat-history .message:after {
+/*.chat .chat-history .message:after {
     bottom: 100%;
     left: 7%;
     border: solid transparent;
@@ -124,10 +123,10 @@ body {
     border-bottom-color: #86BB71;
     border-width: 10px;
     margin-left: -10px;
-}
-.chat .chat-history .my-message {
+}*/
+/*.chat .chat-history .my-message {
     background: #86BB71;
-}
+}*/
 .chat .chat-message, .room .room-create {
     padding: 20px;
 }
@@ -290,6 +289,13 @@ ul {
 .social-buttons div span {
     font-weight: bold;
 }
+.chat-message {
+    position: relative;
+}
+.chat-message > .close {
+    top: 20px;
+    display: none;
+}
 .chat-message button, .controls a {
     font-family: "Roboto", sans-serif;
     float: right;
@@ -357,4 +363,31 @@ a.logout-btn:hover:enabled, a.logout-btn:active, a.logout-btn:focus {
 }
 button:disabled {
     background: gray;
+}
+
+.close {
+    cursor: pointer;
+    position: absolute;
+    right: 25px;
+    top: 0px;
+    width: 32px;
+    height: 32px;
+    opacity: 0.3;
+}
+.close:hover {
+    opacity: 1;
+}
+.close:before, .close:after {
+    position: absolute;
+    left: 15px;
+    content: ' ';
+    height: 33px;
+    width: 2px;
+    background-color: #333;
+}
+.close:before {
+    transform: rotate(45deg);
+}
+.close:after {
+    transform: rotate(-45deg);
 }
