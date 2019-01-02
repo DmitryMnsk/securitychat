@@ -15,7 +15,7 @@ nunjucks.configure(path.join(__dirname, '..', 'client', 'views'), {
 });
 
 server.listen((process.env.PORT || 5000), () => {
-    console.log('server started on port');
+    console.log('server started on port ' + (process.env.PORT || 5000));
     //Подключаем ресты и пути к файлам (статика)
     require('./initservices')(app);
     //Подключаем БД
