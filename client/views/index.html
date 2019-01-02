@@ -8,10 +8,10 @@
     {% if not error %}
         <!--<script src='/vendor/socket.io-client/dist/socket.io.js'></script>-->
         <script src='/socket.io/socket.io.js'></script>
-    
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/aes.min.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/pbkdf2.min.js"></script>
+
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/aes.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/pbkdf2.js"></script>
     {% endif %}
 </head>
 <body>
@@ -59,7 +59,9 @@
                     <input type="file" onchange="previewFile()" id="file" multiple><br>
                     <div>
                         <input type="text" placeholder="Type your code" name="code"/>
-                        <button type="submit">Send</button>
+                        <button id="applyCode" type="button">Apply Code</button>
+                        <button id="resetCode" type="button">Reset Code</button>
+                        <button id="submit" type="submit">Send</button>
                     </div>
                 </div>
             </div>

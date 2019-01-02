@@ -32,7 +32,8 @@ $( document ).ready( () => {
         return;
     }
     var room = location.pathname.substr(1),
-        socket = io.connect('http://localhost:7777');
+        socket = io.connect('http://localhost:7777'),
+        code = null;
 
     socket.on('connected', function (msg) {
         socket.emit('join', room);
@@ -46,7 +47,9 @@ $( document ).ready( () => {
         }
     });
 
-    $('.chat-message button').on('click', send);
+    $('.chat-message button#submit').on('click', send);
+    $('.chat-message button#applyCode').on('click', applyCode);
+    $('.chat-message button#resetCode').on('click', resetCode);
     $('#inputfield').on('keyup', (e) => {
         if (e.keyCode == 13) {
             if (!e.ctrlKey) {
@@ -54,6 +57,21 @@ $( document ).ready( () => {
             }
         }
     });
+
+    function applyCode (e) {
+        e.preventDefault();
+        code = $("input[name='code']").val().trim() || null;
+        $('.chat-history li').remove();
+        socket.emit('receiveHistory', room);
+    }
+
+    function resetCode (e) {
+        e.preventDefault();
+        code = null;
+        $("input[name='code']").val('');
+        $('.chat-history li').remove();
+        socket.emit('receiveHistory', room);
+    }
 
     function send (e) {
         e.preventDefault();
@@ -75,12 +93,14 @@ $( document ).ready( () => {
     }
 
     function applyCrypt (text) {
-        debugger
-       /* let cryptoCode = $("input[name='code']").val().trim();
+        let cryptoCode = $("input[name='code']").val().trim();
+        code = cryptoCode || null;
         if (!cryptoCode) {
             cryptoCode = location.pathname.substr(1);
         }
-        return Crypto.AES.encrypt(text, cryptoCode)*/
+        return CryptoJS.AES.encrypt(text, cryptoCode).toString();
+
+        //CryptoJS.AES.decrypt(ciphertext.toString(), '44').toString(CryptoJS.enc.Utf8)
     }
 
     function sendMessage (selector, callback) {
@@ -106,6 +126,7 @@ $( document ).ready( () => {
             content = applyCrypt(selector.val().trim());
         }
         if(!!content) {
+            console.log(content);
             socket.emit('msg', {
                 type: type,
                 content: content
@@ -121,7 +142,23 @@ $( document ).ready( () => {
         return $('<div />').text(str).html();
     }
 
+    function getContent (type, defaultContent) {
+        switch (type) {
+            case 'img':
+                if (!code) {
+                    return '___' + (Math.random() * 10000000).toFixed(2) + '___';
+                }
+                return defaultContent;
+        }
+        if (code) {
+            return CryptoJS.AES.decrypt(defaultContent, code).toString(CryptoJS.enc.Utf8)
+        }
+        return defaultContent
+
+    }
+
     function addMessage(message) {
+        console.log(message.content);
         message.date      = (new Date(message.date)).toLocaleString();
         message.username  = encodeHTML(message.username);
         if (message.type) {
@@ -133,19 +170,19 @@ $( document ).ready( () => {
                             width: message.content.width,
                             height: message.content.height
                         });
-                        message.content = '' +
+                        message.content = getContent(message.type, '' +
                             '<a download="' + (message.filename || 'download')  + '" href="' + message.content.dataURL + '" target="_blank">' +
                             'Скачать картинку' +
-                            '</a><br/>' + div.prop('outerHTML');
+                            '</a><br/>' + div.prop('outerHTML'));
                     } else {
                         message.content = '';
                     }
                     break;
                 default:
-                    message.content = encodeHTML(message.content);
+                    message.content = getContent(message.type, encodeHTML(message.content));
             }
         } else {
-            message.content = encodeHTML(message.content);
+            message.content = getContent(message.type, encodeHTML(message.content));
         }
 
         var html = `
@@ -161,7 +198,7 @@ $( document ).ready( () => {
 
         $(".chat-history").animate({ scrollTop: $('.chat-history')[0].scrollHeight}, 1000);
     }
-    $( window ).unload(function() {
+    $( window ).on('unload', function() {
         socket.emit('disconnect');
     });
 });
