@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = mongoose => {
-    mongoose.connect('mongodb://DmitryMinsk:DmitryMinsk1@ds159676.mlab.com:59676/secure_chat', {
+    mongoose.connect(process.env.DB, {
         useNewUrlParser: true
     });
     mongoose.Promise = require('bluebird'); //Либа для промисов
