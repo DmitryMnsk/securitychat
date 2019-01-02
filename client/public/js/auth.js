@@ -32,7 +32,7 @@ $( document ).ready( () => {
         return;
     }
     var room = location.pathname.substr(1),
-        socket = io.connect('http://localhost:7777'),
+        socket = io.connect(),
         code = null,
         MAXHEIGHTCONST = 120;
 
