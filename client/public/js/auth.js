@@ -33,7 +33,8 @@ $( document ).ready( () => {
     }
     var room = location.pathname.substr(1),
         socket = io.connect('http://localhost:7777'),
-        code = null;
+        code = null,
+        MAXHEIGHTCONST = 120;
 
     socket.on('connected', function (msg) {
         socket.emit('join', room);
@@ -49,6 +50,11 @@ $( document ).ready( () => {
 
     $('.chat-message button#submit').on('click', send);
     $('.chat-message button#applyCode').on('click', applyCode);
+    $("input[name='code']").on('keyup', (e) => {
+        if (e.keyCode == 13) {
+            applyCode(e);
+        }
+    });
     $('.chat-message button#resetCode').on('click', resetCode);
     $('#inputfield').on('keyup', (e) => {
         if (e.keyCode == 13) {
@@ -88,6 +94,10 @@ $( document ).ready( () => {
 
         sendMessage($("textarea[name='message']"), function () {
             this.val('');
+            var data = this.data();
+            this.height(data.defaultHeight || 'auto');
+            this.attr('placeholder', data.defaultPlaceholder || '');
+            this.removeData();
             this.css({backgroundImage: 'none'});
         });
     }
@@ -134,7 +144,6 @@ $( document ).ready( () => {
             if (typeof callback == 'function') {
                 callback.call(selector);
             }
-            selector.data({});
         }
     }
 
@@ -161,15 +170,26 @@ $( document ).ready( () => {
         console.log(message.content);
         message.date      = (new Date(message.date)).toLocaleString();
         message.username  = encodeHTML(message.username);
+        var imgId, imgData;
         if (message.type) {
             switch (message.type) {
                 case 'img':
                     if (typeof message.content == 'object') {
                         var div = $("<div></div>").css({
                             backgroundImage: "url(" + message.content.dataURL + ")",
-                            width: message.content.width,
-                            height: message.content.height
+                            height: MAXHEIGHTCONST,
+                            backgroundSize: 'contain',
+                            backgroundRepeat: 'no-repeat',
+                            cursor: 'pointer'
                         });
+                        imgData = {
+                            width: message.content.width,
+                            height: message.content.height,
+                            maxHeight: MAXHEIGHTCONST,
+                            wide: false
+                        };
+                        imgId = (Math.random() * 1000000000000).toFixed(0);
+                        div.attr('id', imgId);
                         message.content = getContent(message.type, '' +
                             '<a download="' + (message.filename || 'download')  + '" href="' + message.content.dataURL + '" target="_blank">' +
                             'Скачать картинку' +
@@ -194,9 +214,27 @@ $( document ).ready( () => {
                 <div class="message my-message" dir="auto">${message.content}</div>
             </li>`;
 
-        $(html).hide().appendTo('.chat-history ul').slideDown(200);
+        html = $(html);
+        if (imgId) {
+            var el = html.find('#' + imgId);
+            el.data(imgData);
+            el.on('click', function () {
+                var el = $(this),
+                    width = $(this).parent('.my-message').width(),
+                    data = el.data();
+                if (!data.wide) {
+                    el.width(width);
+                    el.height(data.height * width / data.width);
+                } else {
+                    el.height(data.maxHeight);
+                }
+                el.data('wide', !data.wide);
+            })
+        }
 
-        $(".chat-history").animate({ scrollTop: $('.chat-history')[0].scrollHeight}, 1000);
+        html.hide().appendTo('.chat-history ul').slideDown(200);
+
+        //$(".chat-history").animate({ scrollTop: $('.chat-history')[0].scrollHeight}, 1000);
     }
     $( window ).on('unload', function() {
         socket.emit('disconnect');

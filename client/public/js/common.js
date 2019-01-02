@@ -38,16 +38,22 @@
                     clipboardData.items[i].type.match(options.matchType)
                 ) {
                     file = clipboardData.items[i].getAsFile();
-                    reader = new FileReader();
-                    reader.onload = function(evt) {
-                        return options.callback.call(element, {
-                            dataURL: evt.target.result,
-                            event: evt,
-                            file: file,
-                            name: file.name
-                        });
+
+                    var img = new Image();
+                    img.onload = function () {
+                        reader = new FileReader();
+                        reader.onload = function(evt) {
+                            return options.callback.call(element, {
+                                dataURL: evt.target.result,
+                                img: img,
+                                event: evt,
+                                file: file,
+                                name: file.name
+                            }, true);
+                        };
+                        reader.readAsDataURL(file);
                     };
-                    reader.readAsDataURL(file);
+                    img.src = _URL.createObjectURL(file);
                     return (found = true);
                 }
             });
@@ -55,33 +61,40 @@
     });
 })(jQuery);
 
-var dataURL, filename;
+var dataURL, filename,
+    _URL = window.URL || window.webkitURL;
 $("#inputfield").pasteImageReader(insertImgInBlock.bind(this, $("#inputfield")));
 
-function insertImgInBlock (element, results, scale) {
+function insertImgInBlock (element, results, single) {
     filename = results.name;
     dataURL = results.dataURL;
     $data.text(dataURL);
     $size.val(results.file.size);
     $type.val(results.file.type);
-    var img = document.createElement("img");
-    img.src = dataURL;
+    var img = results.img;
     var w = img.width;
     var h = img.height;
     $width.val(w);
     $height.val(h);
     var css = {
         backgroundImage: "url(" + dataURL + ")",
+        width: single ? '100%': 120*w/h,
+        height: 120,
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat'
+    }, data = {
         width: w,
-        height: h
+        height: h,
+        dataURL: dataURL,
+        filename: filename,
+        type: 'img',
+        defaultHeight: element.data('defaultHeight') || element.height(),
+        defaultPlaceholder: element.data('defaultPlaceholder') || element.attr('placeholder')
     };
-    if (scale) {
-        css.width = w*scale + 'px';
-        css.height = h*scale + 'px';
-    }
+    element.attr('placeholder', '');
     return element
         .css(css)
-        .data({ width: w, height: h, dataURL: dataURL, filename: filename, type: 'img'});
+        .data(data);
 }
 
 var $data, $size, $type, $width, $height;
@@ -137,12 +150,17 @@ function previewFile () {
         if (fileField.files.length == 1) {
             file = files[0];
             loadOneFile(file, function(evt) {
-                return insertImgInBlock( $("#inputfield"), {
-                    dataURL: evt.target.result,
-                    event: evt,
-                    file: file,
-                    name: file.name
-                });
+                var img = new Image();
+                img.onload = function () {
+                    insertImgInBlock( $("#inputfield"), {
+                        dataURL: evt.target.result,
+                        event: evt,
+                        img: img,
+                        file: file,
+                        name: file.name
+                    }, true);
+                };
+                img.src = _URL.createObjectURL(file);
             });
         } else {
             for (let i = 0; i < fileField.files.length; i++) {
@@ -150,16 +168,21 @@ function previewFile () {
                 var span = $("<div style='display: inline-block'></div>");
                 var as = function (f, s, fn) {
                     loadOneFile(f, function (evt) {
-                        $('#multifiles').append(fn(s, {
-                            dataURL: evt.target.result,
-                            event: evt,
-                            file: f,
-                            name: f.name
-                        }, 0.1));
-                    });
-                    /*setTimeout(function () {
+                        var img = new Image();
+                        img.onload = function () {
+                            $('#multifiles').append(fn(s, {
+                                dataURL: evt.target.result,
+                                event: evt,
+                                img: img,
+                                file: f,
+                                name: f.name
+                            }));
+                        };
+                        img.src = _URL.createObjectURL(file);
 
-                    }, 200);*/
+
+
+                    });
                 }(file, span, insertImgInBlock);
             }
             $('#inputfield').hide();
