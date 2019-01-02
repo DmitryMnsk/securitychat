@@ -14,7 +14,7 @@ nunjucks.configure(path.join(__dirname, '..', 'client', 'views'), {
     express: app
 });
 
-server.listen(7777, '0.0.0.0', () => {
+server.listen(5000, () => {
     console.log('server started on port 7777');
     //Подключаем ресты и пути к файлам (статика)
     require('./initservices')(app);
