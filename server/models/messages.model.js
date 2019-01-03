@@ -5,12 +5,15 @@ const Mixed = mongoose.Mixed;
 //const {Schema} = require('mongoose');
 
 const MessageSchema = new Schema({
-    date: {type: String},
+    date: {type: Date},
     room: {type: String},
     type: {type: String},
     code: {type: String},
     content: {type: Mixed},
-    username: {type: String}
+    username: {type: String},
+
+    isDeleted: {type: Boolean},
+    isRead: {type: Boolean}
 }, {
     versionKey: false, // создание параметра __V при редактировании увеличивается
     collection: 'MessageCollection'

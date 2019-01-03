@@ -225,7 +225,7 @@ $( document ).ready( () => {
             this.val('');
             var data = this.data();
             this.height(data.defaultHeight || 'auto');
-            this.attr('placeholder', data.defaultPlaceholder || '');
+            this.attr('placeholder', data.defaultPlaceholder || this.attr('placeholder'));
             this.attr('readOnly', false);
             this.removeData();
             this.css({backgroundImage: 'none'});

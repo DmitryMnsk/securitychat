@@ -1,4 +1,7 @@
 "use strict";
+const MessageModel = require('./models/messages.model');
+const log = require('./logservice');
+const utils = require('./utils');
 
 module.exports = mongoose => {
     mongoose.connect(process.env.DB, {
@@ -6,10 +9,42 @@ module.exports = mongoose => {
     });
     mongoose.Promise = require('bluebird'); //Либа для промисов
 
+    mongoose.set('debug', function(coll, method, query, doc, options) {
+        let set = {
+            coll: coll,
+            method: method,
+            query: query,
+            doc: doc,
+            options: options
+        };
+        console.log(utils.serializer(set));
+    });
+
     setInterval(() => {
-        mongoose.connection.db.dropCollection('MessageCollection', function(err, result) {
-            if (err) return console.error("MessageModel", err);
-            console.log("Collection 'MessageCollection' has been dropped", err);
-        });
-    }, 5 * 24 * 60 * 60 * 1000);
+        let a = new Date();
+        a.setDate(a.getDate() - 1);
+        MessageModel
+            .find({date: {$gte: a}})
+            .deleteMany()
+            .exec(err => {
+                if (!err) {
+                    log.addRec(`records before ${a} remooved`);
+                } else {
+                    log.addRec(err);
+                }
+            });
+    }, 60 * 60 * 1000);
+
+    setInterval(() => {
+        MessageModel
+            .find({isDeleted: true})
+            .deleteMany()
+            .exec(err => {
+                if (!err) {
+                    log.addRec(`isDeleted records remooved`);
+                } else {
+                    log.addRec(err);
+                }
+            });
+    }, 60 * 1000);
 };
