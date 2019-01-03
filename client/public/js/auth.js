@@ -1,32 +1,3 @@
-function response (data) {
-    let resp = data.responseText;
-    try {
-        if (data.message != void (0)) {
-            resp = data.message;
-        } else {
-            resp = JSON.parse(data.responseText);
-            resp = resp.message;
-        }
-    } catch (e) {}
-    return resp;
-}
-
-$(".logout-btn").on('click', e => {
-    e.preventDefault();
-    $.ajax({
-        url: '/logout',
-        type: 'POST',
-        data: {},
-        success: (res) => {
-            alert(response(res));
-            location.reload();
-        },
-        error: (res) => {
-            alert(response(res));
-        }
-    });
-});
-
 $( document ).ready( () => {
     if (!location.pathname.substr(1)){
         return;
@@ -36,151 +7,33 @@ $( document ).ready( () => {
         code = null,
         MAXHEIGHTCONST = 120;
 
-    socket.on('connected', function (msg) {
-        socket.emit('join', room);
-        socket.emit('receiveHistory', room);
-    });
-    socket.on('message', addMessage);
+    /*Работа с сокетами*/
 
-    socket.on('history', messages => {
-        for (let message of messages) {
-            addMessage(message);
-        }
-    });
-
-    $('.chat-message button#submit').on('click', send);
-    $('.chat-message span#clearTextArea').on('click', function (e) {
-      var textarea = $("textarea[name='message']"),
-          data = textarea.data();
-        textarea.height(data.defaultHeight || 'auto');
-        textarea.attr('placeholder', data.defaultPlaceholder || '');
-        textarea.attr('readOnly', false);
-        textarea.removeData();
-        textarea.css({backgroundImage: 'none'});
-            $(this).hide();
-        });
-
-    $('.chat-message button#applyCode').on('click', applyCode);
-    $("input[name='code']").on('keyup', (e) => {
-        if (e.keyCode == 13) {
-            applyCode(e);
-        }
-    });
-    $('.chat-message button#resetCode').on('click', resetCode);
-    $('#inputfield').on('keyup', (e) => {
-        if (e.keyCode == 13) {
-            if (!e.ctrlKey) {
-                send(e);
-            }
-        }
-    });
-
-    function applyCode (e) {
-        e.preventDefault();
-        code = $("input[name='code']").val().trim() || null;
-        $('.chat-history li').remove();
-        socket.emit('receiveHistory', room);
-    }
-
-    function resetCode (e) {
-        e.preventDefault();
-        code = null;
-        $("input[name='code']").val('');
-        $('.chat-history li').remove();
-        socket.emit('receiveHistory', room);
-    }
-
-    function send (e) {
-        e.preventDefault();
-        if ($("#multifiles:visible").length) {
-            $("#multifiles div").each(function(i, img) {
-                sendMessage($(this), function () {
-                    this.remove();
-                });
-            });
-            $('#inputfield').show();
-            $('#multifiles').hide();
+    socket.on('connected', socketConnected);
+    socket.on('connect_error', resetCode);
+    socket.on('disconnect', resetCode);
+    socket.on('message', (message, my) => {
+        if (!code) {
             return;
         }
+        addMessage(message, my)
+    });
+    socket.on('history', socketHistory);
 
-        sendMessage($("textarea[name='message']"), function () {
-            this.val('');
-            var data = this.data();
-            this.height(data.defaultHeight || 'auto');
-            this.attr('placeholder', data.defaultPlaceholder || '');
-            this.attr('readOnly', false);
-            this.removeData();
-            this.css({backgroundImage: 'none'});
-            $('.chat-message span#clearTextArea').hide();
-        });
+    function socketConnected (msg) {
+        socket.emit('join', room);
+        socket.emit('receiveHistory', room);
     }
 
-    function applyCrypt (text) {
-        let cryptoCode = $("input[name='code']").val().trim();
-        code = cryptoCode || null;
-        if (!cryptoCode) {
-            cryptoCode = location.pathname.substr(1);
-        }
-        return CryptoJS.AES.encrypt(text, cryptoCode).toString();
-
-        //CryptoJS.AES.decrypt(ciphertext.toString(), '44').toString(CryptoJS.enc.Utf8)
-    }
-
-    function sendMessage (selector, callback) {
-        var content,
-            type = 'text';
-
-        if (selector.data() && selector.data().type) {
-            var data = selector.data();
-            type = data.type;
-            switch (data.type) {
-                case 'img':
-                    content = {
-                        width: data.width,
-                        height: data.height,
-                        filename: data.filename,
-                        dataURL: data.dataURL
-                    };
-                    break;
-                default:
-                    content = applyCrypt(selector.val().trim());
-            }
-        } else {
-            content = applyCrypt(selector.val().trim());
-        }
-        if(!!content) {
-            console.log(content);
-            socket.emit('msg', {
-                type: type,
-                content: content
-            }, room);
-            if (typeof callback == 'function') {
-                callback.call(selector);
-            }
+    function socketHistory (messages) {
+        $('.chat-history li').remove();
+        let i = messages.length;
+        for (let message of messages) {
+            addMessage(message,!--i, true);
         }
     }
 
-    function encodeHTML (str){
-        return $('<div />').text(str).html();
-    }
-
-    function getContent (type, defaultContent) {
-        switch (type) {
-            case 'img':
-                if (!code) {
-                    return '___' + (Math.random() * 10000000).toFixed(2) + '___';
-                }
-                return defaultContent;
-        }
-        if (code) {
-            return CryptoJS.AES.decrypt(defaultContent, code).toString(CryptoJS.enc.Utf8)
-        }
-        return defaultContent
-
-    }
-
-    function addMessage(message) {
-        console.log(message.content);
+    function addMessage(message, scroll, history) {
         message.date      = (new Date(message.date)).toLocaleString();
         message.username  = encodeHTML(message.username);
         var imgId, imgData;
@@ -245,10 +98,153 @@ $( document ).ready( () => {
             })
         }
 
-        html.hide().appendTo('.chat-history ul').slideDown(200);
-
-        //$(".chat-history").animate({ scrollTop: $('.chat-history')[0].scrollHeight}, 1000);
+        html.appendTo('.chat-history ul');
+        if (scroll)
+            doScroll();
     }
+
+    function doScroll () {
+        $(".chat-history").scrollTop($('.chat-history ul').outerHeight());
+    }
+    /*END Работа с сокетами*/
+
+    /*JQuery обработчики*/
+
+    // Работа с вводом
+    $('.chat-message button#submit').on('click', send);
+    $('#inputfield').on('keyup', (e) => {
+        if (e.keyCode == 13) {
+            if (!e.ctrlKey) {
+                send(e);
+            }
+        }
+    });
+
+    // Крестик удаления картинки из textarean
+    $('.chat-message span#clearTextArea').on('click', function (e) {
+      var textarea = $("textarea[name='message']"),
+          data = textarea.data();
+        textarea.height(data.defaultHeight || 'auto');
+        textarea.attr('placeholder', data.defaultPlaceholder || '');
+        textarea.attr('readOnly', false);
+        textarea.removeData();
+        textarea.css({backgroundImage: 'none'});
+            $(this).hide();
+        });
+
+    // Работа с кодом
+    $('.chat-message button#resetCode').on('click', resetCode);
+    $('.chat-message button#applyCode').on('click', applyCode);
+    $("input[name='code']").on('keyup', (e) => {
+        if (e.keyCode == 13) {
+            applyCode(e);
+        }
+    });
+    /*JQuery обработчики*/
+
+
+    function applyCode (e) {
+        e.preventDefault();
+        code = $("input[name='code']").val().trim() || null;
+        $('.chat-history li').remove();
+        socket.emit('receiveHistory', room);
+    }
+
+    function resetCode (e) {
+        e && e.preventDefault && e.preventDefault();
+        code = null;
+        $("input[name='code']").val('');
+        $('.chat-history li').remove();
+        socket.emit('receiveHistory', room);
+    }
+
+    function send (e) {
+        e.preventDefault();
+        if ($("#multifiles:visible").length) {
+            $("#multifiles div").each(function(i, img) {
+                sendMessage($(this), function () {
+                    this.remove();
+                });
+            });
+            $('#inputfield').show();
+            $('#multifiles').hide();
+            return;
+        }
+
+        sendMessage($("textarea[name='message']"), function () {
+            this.val('');
+            var data = this.data();
+            this.height(data.defaultHeight || 'auto');
+            this.attr('placeholder', data.defaultPlaceholder || '');
+            this.attr('readOnly', false);
+            this.removeData();
+            this.css({backgroundImage: 'none'});
+            $('.chat-message span#clearTextArea').hide();
+        });
+    }
+
+    function applyCrypt (text) {
+        let cryptoCode = $("input[name='code']").val().trim();
+        code = cryptoCode || null;
+        if (!cryptoCode) {
+            cryptoCode = location.pathname.substr(1);
+        }
+        return CryptoJS.AES.encrypt(text, cryptoCode).toString();
+    }
+
+    function sendMessage (selector, callback) {
+        var content,
+            type = 'text';
+
+        if (selector.data() && selector.data().type) {
+            var data = selector.data();
+            type = data.type;
+            switch (data.type) {
+                case 'img':
+                    content = {
+                        width: data.width,
+                        height: data.height,
+                        filename: data.filename,
+                        dataURL: data.dataURL
+                    };
+                    break;
+                default:
+                    content = applyCrypt(selector.val().trim());
+            }
+        } else {
+            content = applyCrypt(selector.val().trim());
+        }
+        if(!!content) {
+            socket.emit('msg', {
+                type: type,
+                content: content
+            }, room);
+            if (typeof callback == 'function') {
+                callback.call(selector);
+            }
+        }
+    }
+
+    function encodeHTML (str){
+        return $('<div />').text(str).html();
+    }
+
+    function getContent (type, defaultContent) {
+        switch (type) {
+            case 'img':
+                if (!code) {
+                    return '___' + (Math.random() * 10000000).toFixed(2) + '___';
+                }
+                return defaultContent;
+        }
+        if (code) {
+            return CryptoJS.AES.decrypt(defaultContent, code).toString(CryptoJS.enc.Utf8)
+        }
+        return defaultContent
+
+    }
+
+
     $( window ).on('unload', function() {
         socket.emit('disconnect');
     });

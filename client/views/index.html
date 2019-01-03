@@ -15,39 +15,13 @@
     {% endif %}
 </head>
 <body>
-    {% if error %}
-        <h3 class="error"> {{ error }} </h3>
-        <div class="login-page">
-            <div class="form">
-                <div style="margin-top: 18px;">
-                    <form class="register" method="post" style="display: none;">
-                        <input type="text" name="username" placeholder="username"/>
-                        <input type="password" name="password" placeholder="password"/>
-                        <button type="submit">create</button>
-                        <p class="message">Already registered? <a href="#">Sign In</a></p>
-                    </form>
-                    <form class="login" method="post">
-                        <input type="text" name="username" placeholder="username"/>
-                        <input type="password" name="password" placeholder="password"/>
-                        <button type="submit">login</button>
-                        <p class="message">Not registered? <a href="#">Create an account</a></p>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <script src="/assets/js/unauth.js"></script>
-    {% else %}
         <div class="container clearfix">
             <div class="chat">
-                <div class="chat-header clearfix">
-                    <div class="chat-about">
-                        <div class="chat-num-users">Hello, {{date}}<span id="name">{{ username }}</span></div>
-                    </div>
-                    <div class="controls">
-                        <a href="#" class="logout-btn">Logout</a>
-                    </div>
+                {% if main %}
+                <div style="padding: 10px;  text-indent: 5px">
+                    {% include "empty.html" %}
                 </div>
-
+                {% else %}
                 <div class="chat-history">
                     <ul>
                     </ul>
@@ -65,11 +39,13 @@
                         <button id="submit" type="submit">Send</button>
                     </div>
                 </div>
+                <script src="/assets/js/common.js"></script>
+                <script src="/assets/js/auth.js"></script>
+                {% endif %}
             </div>
         </div>
-        <script src="/assets/js/common.js"></script>
-        <script src="/assets/js/auth.js"></script>
+
     <!--<script src="/assets/js.js"></script>-->
-    {% endif %}
+
 </body>
 </html>

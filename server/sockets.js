@@ -45,8 +45,8 @@ module.exports = io => {
              model.save();*/
             MessageModel.create(obj, err => {
                 if (err) return console.error("MessageModel", err);
-                socket.emit('message', obj);
-                socket.to(room).emit('message', obj);
+                socket.emit('message', obj, true);           //отправка себе
+                socket.to(room).emit('message', obj);                       //отправка остальным
             });
         });
 

@@ -68,15 +68,10 @@ $("#inputfield").pasteImageReader(insertImgInBlock.bind(this, $("#inputfield")))
 function insertImgInBlock (element, results, single) {
     filename = results.name;
     dataURL = results.dataURL;
-    $data.text(dataURL);
-    $size.val(results.file.size);
-    $type.val(results.file.type);
-    var img = results.img;
-    var w = img.width;
-    var h = img.height;
-    $width.val(w);
-    $height.val(h);
-    var css = {
+    var img = results.img,
+        w = img.width,
+        h = img.height,
+        css = {
         backgroundImage: "url(" + dataURL + ")",
         width: single ? '100%': 120*w/h,
         height: 120,
@@ -108,39 +103,6 @@ function insertImgInBlock (element, results, single) {
         .css(css)
         .data(data);
 }
-
-var $data, $size, $type, $width, $height;
-$(function() {
-    $data = $(".data");
-    $size = $(".size");
-    $type = $(".type");
-    $width = $("#width");
-    $height = $("#height");
-   /* $("#inputfield").on("click", function() {
-        var $this = $(this);
-        var bi = $this.css("background-image");
-        if (bi != "none") {
-            $data.text(bi.substr(4, bi.length - 6));
-        }
-
-        $(".active").removeClass("active");
-        $this.addClass("active");
-
-        $this.toggleClass("contain");
-
-        $width.val($this.data("width"));
-        $height.val($this.data("height"));
-        if ($this.hasClass("contain")) {
-            $this.css({
-                width: $this.data("width"),
-                height: $this.data("height"),
-                "z-index": "10"
-            });
-        } else {
-            $this.css({ width: "", height: "", "z-index": "" });
-        }
-    });*/
-});
 
 function copy(text) {
     var t = document.getElementById("base64");
