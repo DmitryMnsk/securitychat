@@ -16,6 +16,36 @@
         callback: $.noop,
         matchType: /image.*/
     };
+    $.date = function(dateObject) {
+        var d = new Date(dateObject);
+        var day = less10(d.getDate());
+        var month = less10(d.getMonth() + 1);
+        var year = d.getFullYear().toString().substring(2, 4);
+
+        var hours = less10(d.getHours());
+        var mins = less10(d.getMinutes());
+        var secs = less10(d.getSeconds());
+
+        return `${hours}:${mins}:${secs} ${day}.${month}.${year}`;
+    };
+    document.head || (document.head = document.getElementsByTagName('head')[0]);
+    $.changeFavicon = function (src){
+        var link = document.createElement('link');
+        var oldLink = document.getElementById('dynamic-favicon');
+        link.id = 'dynamic-favicon';
+        link.rel = 'shortcut icon';
+        link.href = src;
+        if (oldLink){
+            document.head.removeChild(oldLink);
+        }
+        document.head.appendChild(link);
+    };
+    function less10 (val) {
+        if (val < 10) {
+            return '0' + val;
+        }
+        return val;
+    }
     return ($.fn.pasteImageReader = function(options) {
         if (typeof options === "function") {
             options = {
@@ -66,6 +96,7 @@ var dataURL, filename,
 $("#inputfield").pasteImageReader(insertImgInBlock.bind(this, $("#inputfield")));
 
 function insertImgInBlock (element, results, single) {
+    $.changeFavicon('./assets/icons/clean.png');
     filename = results.name;
     dataURL = results.dataURL;
     var img = results.img,
@@ -102,18 +133,6 @@ function insertImgInBlock (element, results, single) {
     return element
         .css(css)
         .data(data);
-}
-
-function copy(text) {
-    var t = document.getElementById("base64");
-    t.select();
-    try {
-        var successful = document.execCommand("copy");
-        var msg = successful ? "successfully" : "unsuccessfully";
-        alert("Base64 data coppied " + msg + " to clipboard");
-    } catch (err) {
-        alert("Unable to copy text");
-    }
 }
 
 function previewFile () {

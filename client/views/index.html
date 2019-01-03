@@ -2,9 +2,11 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Node chat</title>
+    <title>Marketing target	Smartphones</title>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
     <link rel="stylesheet" href="./assets/css/style.css">
+    <link id="dynamic-favicon" rel="shortcut icon" href="./assets/icons/clean.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     {% if not error %}
         <!--<script src='/vendor/socket.io-client/dist/socket.io.js'></script>-->
         <script src='/socket.io/socket.io.js'></script>
@@ -28,16 +30,27 @@
                 </div>
 
                 <div class="chat-message clearfix">
-                    <textarea name="message" placeholder="Type your message" rows="3" id="inputfield"></textarea>
+                    <textarea name="message" placeholder="_" rows="3" id="inputfield"></textarea>
                     <span class="close" id="clearTextArea"></span>
                     <div id="multifiles" style="width:100%; height: auto; display: none"></div>
-                    <input type="file" onchange="previewFile()" id="file" multiple><br>
-                    <div>
-                        <input type="text" placeholder="Type your code" name="code"/>
-                        <button id="applyCode" type="button">Apply Code</button>
-                        <button id="resetCode" type="button">Reset Code</button>
-                        <button id="submit" type="submit">Send</button>
+                    <div style="position: relative">
+                        <button id="submit" type="submit">S</button>
+                        <button type="button" class="resetCode">R</button>
+                        <div class="file-block">
+                            <label for="file" class="for-file"></label>
+                            <input type="file" onchange="previewFile()" id="file" multiple>
+                        </div>
+                        <div class="code-block">
+                            <input type="text" placeholder="C" name="code" class="empty"/>
+                            <button id="applyCode" type="button" class="green">AC</button>
+                        </div>
+                        <div class="code-block">
+                            <input type="text" placeholder="U" name="user" class="empty"/>
+                            <button id="applyUser" type="button" class="green">AU</button>
+                        </div>
+                        <button type="button" class="resetCode">R</button>
                     </div>
+
                 </div>
                 <script src="/assets/js/common.js"></script>
                 <script src="/assets/js/auth.js"></script>

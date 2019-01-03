@@ -4,6 +4,8 @@
     box-sizing: border-box;
 }
 
+*:focus {outline:none}
+
 body {
     background: #C5DDEB;
     font-family: "Roboto", sans-serif;
@@ -13,7 +15,7 @@ body {
 
 .container {
     margin: 2% auto;
-    width: 760px;
+    max-width: 1024px;
     background: #444753;
 }
 
@@ -92,8 +94,9 @@ body {
 .chat .chat-history, .room .room-list {
     padding: 10px 30px 20px;
     border-bottom: 2px solid white;
-    overflow-y: scroll;
-    max-height: 580px;
+    overflow-x: hidden;
+    word-break: break-word;
+    word-wrap: break-word;
 }
 .chat .chat-history .message-data {
     margin-bottom: 15px;
@@ -137,6 +140,7 @@ body {
     font: 14px/22px "Roboto", Arial, sans-serif;
     margin-bottom: 10px;
     resize: none;
+    background: none;
 }
 .online, .offline, .me {
     margin-right: 3px;
@@ -296,32 +300,7 @@ ul {
     top: 20px;
     display: none;
 }
-.chat-message button, .controls a {
-    font-family: "Roboto", sans-serif;
-    float: right;
-    text-transform: uppercase;
-    outline: 0;
-    background: #86BB71;
-    border: 0;
-    padding: 15px;
-    color: #FFFFFF;
-    font-size: 14px;
-    -webkit-transition: all 0.3 ease;
-    transition: all 0.3 ease;
-    cursor: pointer;
-}
-button:hover:enabled, button:active, button:focus {
-    background: #89c771;
-}
-a.rooms-btn:hover:enabled, a.rooms-btn:active, a.rooms-btn:focus {
-    background: #89c771;
-}
-a.logout-btn{
-    background-color: rgb(226, 98, 92);
-}
-a.logout-btn:hover:enabled, a.logout-btn:active, a.logout-btn:focus {
-    background-color: rgb(245, 106, 99);
-}
+
 .controls {
     float: right;
     margin: 0;
@@ -390,4 +369,75 @@ button:disabled {
 }
 .close:after {
     transform: rotate(-45deg);
+}
+
+#file {
+    opacity: 0;
+    position: absolute;
+    z-index: -1;
+}
+
+label.for-file {
+    position: relative;
+    top: 5px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    display: inline-block;
+    background-color: grey;
+}
+
+.code-block, .file-block {
+    display: inline-block;
+    position: relative;
+    float: left;
+}
+
+.file-block {
+    margin-right: 10px;
+}
+
+.code-block > * {
+    width: 30px;
+    height: 30px;
+}
+.code-block button {
+    padding: 5px;
+    border: 0;
+    cursor: pointer;
+}
+.code-block input {
+    border: 0;
+}
+.code-block input.empty {
+    background: #ff000012;
+}
+.code-block input[name=user] {
+    width: 70px;
+    margin-left: 20px;
+}
+.code-block button.green {
+    background-color: rgba(134, 187, 113, 0.4);
+}
+
+#submit {
+    cursor: pointer;
+    border: 0;
+    margin-right: 30px;
+    float: left;
+    height: 30px;
+    width: 120px;
+    background: none;
+}
+
+.resetCode {
+    cursor: pointer;
+    position: relative;
+    top: -10px;
+    border: 0;
+    margin: 0 30px;
+    float: left;
+    height: 50px;
+    width: 50px;
 }

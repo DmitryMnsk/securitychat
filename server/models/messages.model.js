@@ -8,6 +8,7 @@ const MessageSchema = new Schema({
     date: {type: String},
     room: {type: String},
     type: {type: String},
+    code: {type: String},
     content: {type: Mixed},
     username: {type: String}
 }, {

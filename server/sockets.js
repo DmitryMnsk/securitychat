@@ -9,7 +9,7 @@ module.exports = io => {
         //socket.join('all');
         socket.on('join', room => {
             socket.room = room;
-           socket.join(room);
+            socket.join(room);
         });
         socket.on('disconnect', () => {
             console.log('disc');
@@ -37,8 +37,9 @@ module.exports = io => {
                 room: room,
                 date: new Date(),
                 content: message.content,
+                code: message.code,
                 type: message.type || 'text',
-                username: socket.id
+                username: message.username
             };
             /*Это равносильно тому что ниже
              const model = new MessageModel(obj);

@@ -5,7 +5,10 @@ $( document ).ready( () => {
     var room = location.pathname.substr(1),
         socket = io.connect(),
         code = null,
+        userName = null,
         MAXHEIGHTCONST = 120;
+
+    document.title = `${room}/Marketing target	Smartphones`;
 
     /*Работа с сокетами*/
 
@@ -13,10 +16,13 @@ $( document ).ready( () => {
     socket.on('connect_error', resetCode);
     socket.on('disconnect', resetCode);
     socket.on('message', (message, my) => {
+        if (!my) {
+            $.changeFavicon('./assets/icons/new.png')
+        }
         if (!code) {
             return;
         }
-        addMessage(message, my)
+        addMessage(message, true);
     });
     socket.on('history', socketHistory);
 
@@ -28,14 +34,19 @@ $( document ).ready( () => {
     function socketHistory (messages) {
         $('.chat-history li').remove();
         let i = messages.length;
+        $.changeFavicon('./assets/icons/new.png');
         for (let message of messages) {
             addMessage(message,!--i, true);
         }
     }
 
     function addMessage(message, scroll, history) {
-        message.date      = (new Date(message.date)).toLocaleString();
-        message.username  = encodeHTML(message.username);
+        let codeServer = getContent(null, message.code || '');
+        if (code != codeServer) {
+            return;
+        }
+        message.date      = getContent('date', $.date(message.date));
+        message.username  = getContent(null, message.username);
         var imgId, imgData;
         if (message.type) {
             switch (message.type) {
@@ -73,6 +84,7 @@ $( document ).ready( () => {
 
         var html = `
             <li>
+                ${getContent('line')}
                 <div class="message-data">
                     <span class="message-data-name">${message.username}</span>
                     <span class="message-data-time">${message.date}</span>
@@ -99,12 +111,14 @@ $( document ).ready( () => {
         }
 
         html.appendTo('.chat-history ul');
-        if (scroll)
+        var chatTop = $('.chat-message').offset().top,
+            win = $(window);
+        if (scroll && (history || (win.scrollTop() <= chatTop) && (win.scrollTop() + win.height() >= chatTop)))
             doScroll();
     }
 
     function doScroll () {
-        $(".chat-history").scrollTop($('.chat-history ul').outerHeight());
+        $(window).scrollTop($(document).height());
     }
     /*END Работа с сокетами*/
 
@@ -113,11 +127,15 @@ $( document ).ready( () => {
     // Работа с вводом
     $('.chat-message button#submit').on('click', send);
     $('#inputfield').on('keyup', (e) => {
+        $.changeFavicon('./assets/icons/clean.png');
         if (e.keyCode == 13) {
             if (!e.ctrlKey) {
                 send(e);
             }
         }
+    });
+    $('#inputfield').on('focus', (e) => {
+        $.changeFavicon('./assets/icons/clean.png');
     });
 
     // Крестик удаления картинки из textarean
@@ -133,27 +151,59 @@ $( document ).ready( () => {
         });
 
     // Работа с кодом
-    $('.chat-message button#resetCode').on('click', resetCode);
+    $('.chat-message button.resetCode').on('click', resetCode);
     $('.chat-message button#applyCode').on('click', applyCode);
     $("input[name='code']").on('keyup', (e) => {
         if (e.keyCode == 13) {
             applyCode(e);
         }
     });
+
+    // Работа с пользователем
+    $('.chat-message button#applyUser').on('click', applyUser);
+    $("input[name='user']").on('keyup', (e) => {
+        if (e.keyCode == 13) {
+            applyUser(e);
+        }
+    });
+    $("input[name='user']").on('focusout', function (e) {
+        $(this).val(userName);
+    });
     /*JQuery обработчики*/
+
+    function applyUser (e) {
+        e.preventDefault();
+        let input = $("input[name='user']");
+        userName = input.val().trim() || null;
+        getClassForInput(input);
+    }
 
 
     function applyCode (e) {
         e.preventDefault();
-        code = $("input[name='code']").val().trim() || null;
+        $.changeFavicon('./assets/icons/clean.png');
+        let input = $("input[name='code']");
+        code = input.val().trim() || null;
+        getClassForInput(input);
         $('.chat-history li').remove();
         socket.emit('receiveHistory', room);
+    }
+
+    function getClassForInput (input) {
+        let value = input.val().trim() || null;
+        input[(value ? 'removeClass': 'addClass')]('empty');
+        input.focusout();
     }
 
     function resetCode (e) {
         e && e.preventDefault && e.preventDefault();
         code = null;
+        userName = null;
         $("input[name='code']").val('');
+        $("input[name='user']").val('');
+        $('#inputfield').val('');
+        getClassForInput($("input[name='code']"));
+        getClassForInput($("input[name='user']"));
         $('.chat-history li').remove();
         socket.emit('receiveHistory', room);
     }
@@ -183,13 +233,16 @@ $( document ).ready( () => {
         });
     }
 
-    function applyCrypt (text) {
+    function getCryptoCode () {
         let cryptoCode = $("input[name='code']").val().trim();
-        code = cryptoCode || null;
         if (!cryptoCode) {
             cryptoCode = location.pathname.substr(1);
         }
-        return CryptoJS.AES.encrypt(text, cryptoCode).toString();
+        return cryptoCode;
+    }
+
+    function applyCrypt (text) {
+        return CryptoJS.AES.encrypt(text, getCryptoCode()).toString();
     }
 
     function sendMessage (selector, callback) {
@@ -209,19 +262,26 @@ $( document ).ready( () => {
                     };
                     break;
                 default:
+                    if (selector.val().trim() == '') {
+                        return;
+                    }
                     content = applyCrypt(selector.val().trim());
             }
         } else {
+            if (selector.val().trim() == '') {
+                return;
+            }
             content = applyCrypt(selector.val().trim());
         }
-        if(!!content) {
-            socket.emit('msg', {
-                type: type,
-                content: content
-            }, room);
-            if (typeof callback == 'function') {
-                callback.call(selector);
-            }
+        let cryptoCode = $("input[name='code']").val().trim();
+        socket.emit('msg', {
+            type: type,
+            code: applyCrypt(getCryptoCode()),
+            content: content,
+            username: applyCrypt(userName || 'anon')
+        }, room);
+        if (typeof callback == 'function') {
+            callback.call(selector);
         }
     }
 
@@ -232,13 +292,19 @@ $( document ).ready( () => {
     function getContent (type, defaultContent) {
         switch (type) {
             case 'img':
+            case 'date':
                 if (!code) {
                     return '___' + (Math.random() * 10000000).toFixed(2) + '___';
                 }
                 return defaultContent;
+            case 'line':
+                return code ? '<hr/>': '';
         }
         if (code) {
-            return CryptoJS.AES.decrypt(defaultContent, code).toString(CryptoJS.enc.Utf8)
+            try {
+                return CryptoJS.AES.decrypt(defaultContent, code).toString(CryptoJS.enc.Utf8)
+            } catch (e) {
+            }
         }
         return defaultContent
 
