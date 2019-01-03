@@ -56,8 +56,9 @@ $( document ).ready( () => {
         if (Cookies.get('codeVal')) {
             $("input[name='code']").val(Cookies.get('codeVal') || null);
             applyCode();
+        } else {
+            socket.emit('receiveHistory', room);
         }
-        //socket.emit('receiveHistory', room);
     }
 
     function socketHistory (messages) {
@@ -70,12 +71,10 @@ $( document ).ready( () => {
     }
 
     function addMessage(message, scroll, history) {
-        let codeServer = getContent(null, message.code || '');
-        if (code != codeServer) {
-            return;
-        }
-        message.date      = getContent('date', $.date(message.date));
-        message.username  = getContent(null, message.username);
+        let codeServer = getContent('code', message.code || '');
+        let showTruth = code === codeServer;
+        message.date      = getContent('date', $.date(message.date), showTruth);
+        message.username  = getContent(null, message.username, showTruth);
         var imgId, imgData;
         if (message.type) {
             switch (message.type) {
@@ -99,21 +98,21 @@ $( document ).ready( () => {
                         message.content = getContent(message.type, '' +
                             '<a download="' + (message.filename || 'download')  + '" href="' + message.content.dataURL + '" target="_blank">' +
                             'Скачать картинку' +
-                            '</a><br/>' + div.prop('outerHTML'));
+                            '</a><br/>' + div.prop('outerHTML'), showTruth);
                     } else {
                         message.content = '';
                     }
                     break;
                 default:
-                    message.content = getContent(message.type, encodeHTML(message.content));
+                    message.content = getContent(message.type, encodeHTML(message.content), showTruth);
             }
         } else {
-            message.content = getContent(message.type, encodeHTML(message.content));
+            message.content = getContent(message.type, encodeHTML(message.content), showTruth);
         }
 
         var html = `
             <li>
-                ${getContent('line')}
+                ${getContent('line', null, showTruth)}
                 <div class="message-data">
                     <span class="message-data-name">${message.username}</span>
                     <span class="message-data-time">${message.date}</span>
@@ -144,7 +143,7 @@ $( document ).ready( () => {
         deleteBtn.data({
             id: message._id
         });
-        if (message.sessionId != Cookies.get('sessionId') || message.removeDate) {
+        if (!showTruth || message.sessionId != Cookies.get('sessionId') || message.removeDate) {
             deleteBtn.hide();
         } else {
             deleteBtn.on('click', function () {
@@ -156,7 +155,7 @@ $( document ).ready( () => {
             })
         }
         html.appendTo('.chat-history ul');
-        if (message.removeDate) {
+        if (showTruth && message.removeDate) {
             doDeleted(message._id);
         }
         var chatTop = $('.chat-message').offset().top,
@@ -347,18 +346,24 @@ $( document ).ready( () => {
         return $('<div />').text(str).html();
     }
 
-    function getContent (type, defaultContent) {
+    function getContent (type, defaultContent, showTruth) {
         switch (type) {
+            case 'code':
+                try {
+                    return CryptoJS.AES.decrypt(defaultContent, code).toString(CryptoJS.enc.Utf8)
+                } catch (e) {
+                }
+                break;
             case 'img':
             case 'date':
-                if (!code) {
+                if (!showTruth) {
                     return '___' + (Math.random() * 10000000).toFixed(2) + '___';
                 }
                 return defaultContent;
             case 'line':
-                return code ? '<hr/>': '';
+                return showTruth ? '<hr/>': '';
         }
-        if (code) {
+        if (showTruth) {
             try {
                 return CryptoJS.AES.decrypt(defaultContent, code).toString(CryptoJS.enc.Utf8)
             } catch (e) {
