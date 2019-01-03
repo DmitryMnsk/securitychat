@@ -24,7 +24,7 @@ module.exports = mongoose => {
         let a = new Date();
         a.setDate(a.getDate() - 1);
         MessageModel
-            .find({date: {$gte: a}})
+            .find({date: {$lte: a}})
             .deleteMany()
             .exec(err => {
                 if (!err) {
@@ -36,8 +36,10 @@ module.exports = mongoose => {
     }, 60 * 60 * 1000);
 
     setInterval(() => {
+        let a = new Date();
+        a.setMinutes(a.getMinutes() - 10);
         MessageModel
-            .find({isDeleted: true})
+            .find({removeDate: {$lte: a}})
             .deleteMany()
             .exec(err => {
                 if (!err) {

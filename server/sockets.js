@@ -39,15 +39,17 @@ module.exports = io => {
                 content: message.content,
                 code: message.code,
                 type: message.type || 'text',
-                username: message.username
+                username: message.username,
+                sessionId: message.sessionId,
+                isRead: false
             };
             /*Это равносильно тому что ниже
              const model = new MessageModel(obj);
              model.save();*/
-            MessageModel.create(obj, err => {
+            MessageModel.create(obj, (err, result) => {
                 if (err) return console.error("MessageModel", err);
-                socket.emit('message', obj, true);           //отправка себе
-                socket.to(room).emit('message', obj);                       //отправка остальным
+                socket.emit('message', result, true);           //отправка себе
+                socket.to(room).emit('message', result);                       //отправка остальным
             });
         });
 
@@ -65,5 +67,13 @@ module.exports = io => {
                     }
                 });
         });
+
+        socket.on('setDeleted', id => {
+            MessageModel.findOneAndUpdate({ _id: id }, { removeDate: new Date() }).exec((err, message) => {
+                if (!err){
+                    socket.emit('deleteMsg', message);
+                }
+            });
+        })
     });
 };

@@ -14,8 +14,10 @@
   "license": "ISC",
   "dependencies": {
     "bluebird": "^3.5.3",
+    "cookie-parser": "^1.4.3",
     "dateformat": "^3.0.3",
     "express": "^4.16.4",
+    "express-session": "^1.15.6",
     "fs": "0.0.1-security",
     "mongoose": "^5.3.16",
     "node-minify": "^3.6.0",

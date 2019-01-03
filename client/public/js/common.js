@@ -16,6 +16,15 @@
         callback: $.noop,
         matchType: /image.*/
     };
+    $.fn.filterByData = function( type, value ) {
+        return this.filter( function() {
+            var $this = $( this );
+
+            return value != null ?
+                $this.data( type ) === value :
+                $this.data( type ) != null;
+        });
+    };
     $.date = function(dateObject) {
         var d = new Date(dateObject);
         var day = less10(d.getDate());

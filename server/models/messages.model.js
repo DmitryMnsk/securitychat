@@ -11,8 +11,8 @@ const MessageSchema = new Schema({
     code: {type: String},
     content: {type: Mixed},
     username: {type: String},
-
-    isDeleted: {type: Boolean},
+    sessionId: {type: String},
+    removeDate: {type: Date},
     isRead: {type: Boolean}
 }, {
     versionKey: false, // создание параметра __V при редактировании увеличивается
