@@ -94,7 +94,7 @@ module.exports = io => {
 
         function modelUpdateRemoteDate (condition, params = {}, callback) {
             MessageModel.updateMany(
-                condition,
+                Object.assign({removeDate: null}, condition),
                 { $set: Object.assign({removeDate: new Date()}, params) }
             ).exec((err) => {
                 if (!err) {

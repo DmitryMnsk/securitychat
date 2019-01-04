@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 
 module.exports = app => {
-    log.init(app);
+    //log.init(app);
 
     app.use(cookieParser());
     app.use(session({

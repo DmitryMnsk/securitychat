@@ -20,10 +20,10 @@ module.exports = {
 };
 
 function writeFile () {
-    logFileName = './server/logs/server_log_' + getLogTime () + '.txt';
-    fs.writeFile(logFileName, 'startServer - ' + getLogTime (), ()=>{});
+    //logFileName = './server/logs/server_log_' + getLogTime () + '.txt';
+    //fs.writeFile(logFileName, 'startServer - ' + getLogTime (), ()=>{});
 }
 
 function addRec (text) {
-    fs.appendFile(logFileName, `\n${getLogTime()} - ` + text, ()=>{});
+    //fs.appendFile(logFileName, `\n${getLogTime()} - ` + text, ()=>{});
 }
