@@ -6,6 +6,7 @@ $( document ).ready( () => {
         socket = io.connect(),
         code = null,
         userName = null,
+        isActive = false,
         MAXHEIGHTCONST = 120;
 
     document.title = `${room}/Marketing target	Smartphones`;
@@ -28,33 +29,40 @@ $( document ).ready( () => {
 
     socket.on('deleteMsg', deleteMsg);
 
-    function deleteMsg (msg) {
-        if (!msg._id) {
+    function deleteMsg (ids) {
+        if (!ids || !ids.length) {
             return;
         }
-        doDeleted(msg._id);
+        doDeleted(ids);
 
     }
 
-    function doDeleted(id) {
-        let span = $(".chat-history span.clearTextArea").filterByData('id', id);
-        if (span.length) {
-            let par = span.parent('li');
-            par.find('.message-data').remove();
-            par.find('.message.my-message').html('removed by author');
-            par.find('.clearTextArea').hide();
-        }
+    function doDeleted(ids) {
+        ids.forEach(id => {
+            let span = $(".chat-history span.clearTextArea").filterByData('id', id);
+            if (span.length) {
+                let par = span.parent('li');
+                par.find('.message-data').remove();
+                par.find('.message.my-message').html('removed by author');
+                par.find('.clearTextArea').hide();
+            }
+        })
     }
 
     function socketConnected (msg) {
         socket.emit('join', room);
 
         if (Cookies.get('userNameVal')) {
-            $("input[name='user']").val(Cookies.get('userNameVal') || null);
+            $("input[name='user']").val(Cookies.get('userNameVal') || '');
             applyUser();
         }
+
         if (Cookies.get('codeVal')) {
-            $("input[name='code']").val(Cookies.get('codeVal') || null);
+            $("input[name='code']").val(Cookies.get('codeVal'));
+            if (Cookies.get('isActive')) {
+                $('#isActive').addClass('active');
+                isActive = Cookies.get('isActive');
+            }
             applyCode();
         } else {
             socket.emit('receiveHistory', room);
@@ -64,7 +72,6 @@ $( document ).ready( () => {
     function socketHistory (messages) {
         $('.chat-history li').remove();
         let i = messages.length;
-        $.changeFavicon('./assets/icons/new.png');
         for (let message of messages) {
             addMessage(message,!--i, true);
         }
@@ -72,7 +79,7 @@ $( document ).ready( () => {
 
     function addMessage(message, scroll, history) {
         let codeServer = getContent('code', message.code || '');
-        let showTruth = code === codeServer;
+        let showTruth = !!code && (code === codeServer);
         message.date      = getContent('date', $.date(message.date), showTruth);
         message.username  = getContent(null, message.username, showTruth);
         var imgId, imgData;
@@ -109,15 +116,16 @@ $( document ).ready( () => {
         } else {
             message.content = getContent(message.type, encodeHTML(message.content), showTruth);
         }
-
+        let cleanCondition = showTruth && (message.sessionId === Cookies.get('sessionId'));
         var html = `
             <li>
-                ${getContent('line', null, showTruth)}
-                <div class="message-data">
-                    <span class="message-data-name">${message.username}</span>
-                    <span class="message-data-time">${message.date}</span>
-                </div>
-                <span class="close small clearTextArea"></span>
+                ${showTruth ? 
+                ('<hr/>' +
+                '<div class="message-data">' +
+                    '<span class="message-data-name">' + message.username + '</span>' +
+                    '<span class="message-data-time">' + message.date + '</span>' +
+                '</div>' +
+                    (cleanCondition ? '<span class="close small clearTextArea"></span>' : '')): ''} 
                 <div class="message my-message" dir="auto">${message.content}</div>
             </li>`;
 
@@ -140,23 +148,21 @@ $( document ).ready( () => {
         }
 
         let deleteBtn = html.find('.clearTextArea');
-        deleteBtn.data({
-            id: message._id
-        });
-        if (!showTruth || message.sessionId != Cookies.get('sessionId') || message.removeDate) {
-            deleteBtn.hide();
-        } else {
+        if (deleteBtn.length) {
+            deleteBtn.data({
+                id: message._id
+            });
             deleteBtn.on('click', function () {
                 var el = $(this),
                     data = el.data();
                 if (data.id) {
-                    socket.emit('setDeleted', data.id);
+                    socket.emit('setDeleted', [data.id]);
                 }
             })
         }
         html.appendTo('.chat-history ul');
         if (showTruth && message.removeDate) {
-            doDeleted(message._id);
+            doDeleted([message._id]);
         }
         var chatTop = $('.chat-message').offset().top,
             win = $(window);
@@ -172,16 +178,15 @@ $( document ).ready( () => {
     /*JQuery обработчики*/
 
     // Работа с вводом
-    $('.chat-message button#submit').on('click', send);
+    $('button#submit').on('click', send);
     $('#inputfield').on('keyup', (e) => {
         $.changeFavicon('./assets/icons/clean.png');
-        if (e.keyCode == 13) {
+        if (e.keyCode === 13) {
             if (!e.ctrlKey) {
                 send(e);
             }
         }
-    });
-    $('#inputfield').on('focus', (e) => {
+    }).on('focus', (e) => {
         $.changeFavicon('./assets/icons/clean.png');
     });
 
@@ -198,45 +203,67 @@ $( document ).ready( () => {
         });
 
     // Работа с кодом
-    $('.chat-message button.resetCode').on('click', resetCode);
-    $('.chat-message button#applyCode').on('click', applyCode);
+    $('button.resetCode').on('click', resetCode);
     $("input[name='code']").on('keyup', (e) => {
-        if (e.keyCode == 13) {
+        if (e.keyCode === 13) {
             applyCode(e);
         }
-    });
-    $("input[name='code']").on('blur', function (e) {
-        if ($(e.relatedTarget).attr('id') != 'applyCode')
-            $(this).val(code);
+    }).on('blur', function (e) {
+        applyCode(e);
     });
 
     // Работа с пользователем
-    $('.chat-message button#applyUser').on('click', applyUser);
     $("input[name='user']").on('keyup', (e) => {
-        if (e.keyCode == 13) {
+        if (e.keyCode === 13) {
             applyUser(e);
         }
+    }).on('blur', function (e) {
+        applyUser(e);
     });
-    $("input[name='user']").on('blur', function (e) {
-        if ($(e.relatedTarget).attr('id') != 'applyUser')
-            $(this).val(userName);
+
+    // Работы с кнопкой активности
+    $('#isActive').on('click', function (e) {
+        if (!code) {
+            return;
+        }
+        let btn = $(this),
+            value = !btn.hasClass('active');
+        btn[(value ? 'addClass': 'removeClass')]('active');
+        isActive = value;
+        Cookies.set('isActive', value);
     });
+
+    // Работа с кнопкой удалить все
+    $('#removeAll').on('click', function (e) {
+        let res = $.map($('.clearTextArea'), obj => $(obj).data('id'));
+        socket.emit('setDeleted', res);
+    });
+
     /*JQuery обработчики*/
 
-    function applyUser (e) {
-        e && e.preventDefault && e.preventDefault();
-        let input = $("input[name='user']");
-        userName = input.val().trim() || null;
+    function applyUser () {
+        let input = $("input[name='user']"),
+            val = input.val().trim() || '';
+        if (val == userName) {
+            return;
+        }
+        userName = val;
         Cookies.set('userNameVal', userName);
         getClassForInput(input);
     }
 
-
-    function applyCode (e) {
-        e && e.preventDefault && e.preventDefault();
+    function applyCode () {
         $.changeFavicon('./assets/icons/clean.png');
-        let input = $("input[name='code']");
-        code = input.val().trim() || null;
+        let input = $("input[name='code']"),
+            val = input.val().trim() || '';
+        if (val == code) {
+            return;
+        }
+        code = input.val().trim() || '';
+        if (!code) {
+            $('#isActive').removeClass('active');
+            isActive = false;
+        }
         Cookies.set('codeVal', code);
         getClassForInput(input);
         $('.chat-history li').remove();
@@ -244,7 +271,7 @@ $( document ).ready( () => {
     }
 
     function getClassForInput (input) {
-        let value = input.val().trim() || null;
+        let value = input.val().trim() || '';
         input[(value ? 'removeClass': 'addClass')]('empty');
         input.focusout();
     }
@@ -253,10 +280,13 @@ $( document ).ready( () => {
         e && e.preventDefault && e.preventDefault();
         code = null;
         userName = null;
+        isActive = false;
         $("input[name='code']").val('');
         $("input[name='user']").val('');
+        $('#isActive').removeClass('active');
         Cookies.remove('userNameVal');
         Cookies.remove('codeVal');
+        Cookies.remove('isActive');
         $('#inputfield').val('');
         getClassForInput($("input[name='code']"));
         getClassForInput($("input[name='user']"));
@@ -360,8 +390,6 @@ $( document ).ready( () => {
                     return '___' + (Math.random() * 10000000).toFixed(2) + '___';
                 }
                 return defaultContent;
-            case 'line':
-                return showTruth ? '<hr/>': '';
         }
         if (showTruth) {
             try {

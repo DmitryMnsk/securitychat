@@ -68,11 +68,17 @@ module.exports = io => {
                 });
         });
 
-        socket.on('setDeleted', id => {
-            MessageModel.findOneAndUpdate({ _id: id }, { removeDate: new Date() }).exec((err, message) => {
-                if (!err){
-                    socket.emit('deleteMsg', message);
-                }
+        socket.on('setDeleted', ids => {
+            if (!ids || !ids.length) {
+                return;
+            }
+            MessageModel.update(
+                { _id: { $in: ids } },
+                { $set: {removeDate: new Date()} }
+            ).exec((err) => {
+                    if (!err) {
+                        socket.emit('deleteMsg', ids);
+                    }
             });
         })
     });

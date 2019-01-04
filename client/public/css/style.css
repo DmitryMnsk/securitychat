@@ -117,26 +117,11 @@ body {
     /*width: 90%;*/
     position: relative;
 }
-/*.chat .chat-history .message:after {
-    bottom: 100%;
-    left: 7%;
-    border: solid transparent;
-    content: " ";
-    height: 0;
-    width: 0;
-    position: absolute;
-    pointer-events: none;
-    border-bottom-color: #86BB71;
-    border-width: 10px;
-    margin-left: -10px;
-}*/
-/*.chat .chat-history .my-message {
-    background: #86BB71;
-}*/
-.chat .chat-message, .room .room-create {
-    padding: 20px;
+.chat .chat-message {
+    padding: 0 20px;
+    border-bottom: 2px solid white;
 }
-.chat .chat-message textarea, .room .room-create input {
+.chat .chat-message textarea {
     width: 100%;
     border: none;
     padding: 10px 20px;
@@ -356,6 +341,11 @@ button:disabled {
     height: 32px;
     opacity: 0.3;
 }
+
+#removeAll.close {
+    right: 0;
+}
+
 .close.small {
     left: -25px;
     top: 13px;
@@ -423,7 +413,7 @@ label.for-file {
 .code-block input.empty {
     background: #ff000012;
 }
-.code-block input[name=user] {
+.code-block input {
     width: 70px;
     margin-left: 20px;
 }
@@ -450,4 +440,17 @@ label.for-file {
     float: left;
     height: 50px;
     width: 50px;
+}
+
+#isActive {
+    position: relative;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    display: inline-block;
+    background-color: grey;
+}
+#isActive.active {
+    background-color: rgba(134, 187, 113, 0.4);
 }

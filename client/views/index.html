@@ -31,27 +31,26 @@
                 </div>
 
                 <div class="chat-message clearfix">
-                    <textarea name="message" placeholder="_" rows="3" id="inputfield"></textarea>
+                    <textarea name="message" placeholder="_" rows="1" id="inputfield"></textarea>
                     <span class="close" id="clearTextArea"></span>
                     <div id="multifiles" style="width:100%; height: auto; display: none"></div>
-                    <div style="position: relative">
-                        <button id="submit" type="submit">S</button>
-                        <button type="button" class="resetCode">R</button>
-                        <div class="file-block">
-                            <label for="file" class="for-file"></label>
-                            <input type="file" onchange="previewFile()" id="file" multiple>
-                        </div>
-                        <div class="code-block">
-                            <input type="text" placeholder="C" name="code" class="empty"/>
-                            <button id="applyCode" type="button" class="green">AC</button>
-                        </div>
-                        <div class="code-block">
-                            <input type="text" placeholder="U" name="user" class="empty"/>
-                            <button id="applyUser" type="button" class="green">AU</button>
-                        </div>
-                        <button type="button" class="resetCode">R</button>
+                </div>
+                <div style="position: relative">
+                    <button id="submit" type="submit">S</button>
+                    <button type="button" class="resetCode">R</button>
+                    <div class="file-block">
+                        <label for="file" class="for-file"></label>
+                        <input type="file" onchange="previewFile()" id="file" multiple>
                     </div>
-
+                    <div class="code-block">
+                        <input type="text" placeholder="C" name="code" class="empty"/>
+                    </div>
+                    <div class="code-block">
+                        <input type="text" placeholder="U" name="user" class="empty"/>
+                        <button type="button" id="isActive"></button>
+                    </div>
+                    <span class="close" id="removeAll"></span>
+                    <button type="button" class="resetCode">R</button>
                 </div>
                 <script src="/assets/js/common.js"></script>
                 <script src="/assets/js/auth.js"></script>
