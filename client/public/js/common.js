@@ -39,8 +39,14 @@
     };
     document.head || (document.head = document.getElementsByTagName('head')[0]);
     $.changeFavicon = function (src){
-        var link = document.createElement('link');
-        var oldLink = document.getElementById('dynamic-favicon');
+        let oldLink = document.getElementById('dynamic-favicon');
+        let newIconName = src.substring(src.lastIndexOf('/') + 1),
+            oldHref = oldLink.href,
+            oldIconName = oldHref.substring(oldHref.lastIndexOf('/') + 1);
+        if (newIconName === oldIconName) {
+            return
+        }
+        let link = document.createElement('link');
         link.id = 'dynamic-favicon';
         link.rel = 'shortcut icon';
         link.href = src;
@@ -124,8 +130,9 @@ function insertImgInBlock (element, results, single) {
         filename: filename,
         type: 'img',
         defaultHeight: element.data('defaultHeight') || element.height(),
-        defaultPlaceholder: element.data('defaultPlaceholder') || element.attr('placeholder')
-    };
+        defaultPlaceholder: element.data('defaultPlaceholder') || element.attr('placeholder'),
+        defaultRows: element.data('defaultRows') || element.attr('rows'),
+        };
     if (single) {
         element.val('');
         element.attr('readOnly', true);

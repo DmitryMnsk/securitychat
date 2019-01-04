@@ -7,6 +7,7 @@ $( document ).ready( () => {
         code = null,
         userName = null,
         isActive = false,
+        isActiveInterval = null,
         MAXHEIGHTCONST = 120;
 
     document.title = `${room}/Marketing target	Smartphones`;
@@ -61,7 +62,8 @@ $( document ).ready( () => {
             $("input[name='code']").val(Cookies.get('codeVal'));
             if (Cookies.get('isActive')) {
                 $('#isActive').addClass('active');
-                isActive = Cookies.get('isActive');
+                isActive = true;
+                setIsActiveInterval(true);
             }
             applyCode();
         } else {
@@ -116,6 +118,7 @@ $( document ).ready( () => {
         } else {
             message.content = getContent(message.type, encodeHTML(message.content), showTruth);
         }
+        message.content = message.content && message.content.replace && message.content.replace(/\n/g,'<br/>') || message.content;
         let cleanCondition = showTruth && (message.sessionId === Cookies.get('sessionId'));
         var html = `
             <li>
@@ -161,7 +164,7 @@ $( document ).ready( () => {
             })
         }
         html.appendTo('.chat-history ul');
-        if (showTruth && message.removeDate) {
+        if (showTruth && message.isUserDeleted) {
             doDeleted([message._id]);
         }
         var chatTop = $('.chat-message').offset().top,
@@ -179,16 +182,26 @@ $( document ).ready( () => {
 
     // Работа с вводом
     $('button#submit').on('click', send);
-    $('#inputfield').on('keyup', (e) => {
-        $.changeFavicon('./assets/icons/clean.png');
-        if (e.keyCode === 13) {
-            if (!e.ctrlKey) {
-                send(e);
+    $('#inputfield').keydown(function (e) {
+        if (e.keyCode === 13 && e.ctrlKey) {
+            if (this.rows < 4) {
+                this.rows++;
             }
+            $(this).val(function(i,val){
+                return val + "\n";
+            });
+        }
+    }).keypress(function(e){
+        $.changeFavicon('./assets/icons/clean.png');
+        if (e.keyCode === 13 && !e.ctrlKey) {
+            send(e);
+            return false;
         }
     }).on('focus', (e) => {
         $.changeFavicon('./assets/icons/clean.png');
     });
+
+
 
     // Крестик удаления картинки из textarean
     $('.chat-message span#clearTextArea').on('click', function (e) {
@@ -199,6 +212,7 @@ $( document ).ready( () => {
         textarea.attr('readOnly', false);
         textarea.removeData();
         textarea.css({backgroundImage: 'none'});
+        textarea.get(0).rows = data.defaultRows || 1;
             $(this).hide();
         });
 
@@ -230,7 +244,12 @@ $( document ).ready( () => {
             value = !btn.hasClass('active');
         btn[(value ? 'addClass': 'removeClass')]('active');
         isActive = value;
-        Cookies.set('isActive', value);
+        if (value) {
+            Cookies.set('isActive', true);
+        } else {
+            Cookies.remove('isActive');
+        }
+        setIsActiveInterval(value);
     });
 
     // Работа с кнопкой удалить все
@@ -241,10 +260,26 @@ $( document ).ready( () => {
 
     /*JQuery обработчики*/
 
+    function setIsActiveInterval (bool) {
+        if (!bool) {
+            clearInterval(isActiveInterval);
+        } else {
+            isActiveInterval = setInterval(() => {
+                emitSetRead();
+            }, 30 * 1000);
+            emitSetRead();
+        }
+    }
+
+    function emitSetRead () {
+        socket.emit('setRead', room, Cookies.get('sessionId'));
+    }
+
+
     function applyUser () {
         let input = $("input[name='user']"),
             val = input.val().trim() || '';
-        if (val == userName) {
+        if (val === userName) {
             return;
         }
         userName = val;
@@ -256,13 +291,15 @@ $( document ).ready( () => {
         $.changeFavicon('./assets/icons/clean.png');
         let input = $("input[name='code']"),
             val = input.val().trim() || '';
-        if (val == code) {
+        if (val === code) {
             return;
         }
         code = input.val().trim() || '';
         if (!code) {
             $('#isActive').removeClass('active');
             isActive = false;
+            Cookies.remove('isActive');
+            setIsActiveInterval(false);
         }
         Cookies.set('codeVal', code);
         getClassForInput(input);
@@ -277,7 +314,6 @@ $( document ).ready( () => {
     }
 
     function resetCode (e) {
-        e && e.preventDefault && e.preventDefault();
         code = null;
         userName = null;
         isActive = false;
@@ -295,7 +331,6 @@ $( document ).ready( () => {
     }
 
     function send (e) {
-        e.preventDefault();
         if ($("#multifiles:visible").length) {
             $("#multifiles div").each(function(i, img) {
                 sendMessage($(this), function () {
@@ -313,6 +348,7 @@ $( document ).ready( () => {
             this.height(data.defaultHeight || 'auto');
             this.attr('placeholder', data.defaultPlaceholder || this.attr('placeholder'));
             this.attr('readOnly', false);
+            this.get(0).rows = data.defaultRows || 1;
             this.removeData();
             this.css({backgroundImage: 'none'});
             $('.chat-message span#clearTextArea').hide();
@@ -348,13 +384,13 @@ $( document ).ready( () => {
                     };
                     break;
                 default:
-                    if (selector.val().trim() == '') {
+                    if (selector.val().trim() === '') {
                         return;
                     }
                     content = applyCrypt(selector.val().trim());
             }
         } else {
-            if (selector.val().trim() == '') {
+            if (selector.val().trim() === '') {
                 return;
             }
             content = applyCrypt(selector.val().trim());

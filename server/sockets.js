@@ -40,8 +40,7 @@ module.exports = io => {
                 code: message.code,
                 type: message.type || 'text',
                 username: message.username,
-                sessionId: message.sessionId,
-                isRead: false
+                sessionId: message.sessionId
             };
             /*Это равносильно тому что ниже
              const model = new MessageModel(obj);
@@ -68,18 +67,40 @@ module.exports = io => {
                 });
         });
 
+        socket.on('setRead', (room, sessionId) => {
+            modelUpdateRemoteDate (
+                {
+                    date: {$lt: new Date()},
+                    room: room,
+                    sessionId: {$ne: sessionId},
+                });
+        });
+
         socket.on('setDeleted', ids => {
             if (!ids || !ids.length) {
                 return;
             }
-            MessageModel.update(
-                { _id: { $in: ids } },
-                { $set: {removeDate: new Date()} }
-            ).exec((err) => {
-                    if (!err) {
+            let apply = function (ids) {
+                modelUpdateRemoteDate({_id: {$in: ids}},
+                    {
+                        content: '',
+                        isUserDeleted: true
+                    },
+                    () => {
                         socket.emit('deleteMsg', ids);
-                    }
+                    });
+            }(ids);
+        });
+
+        function modelUpdateRemoteDate (condition, params = {}, callback) {
+            MessageModel.updateMany(
+                condition,
+                { $set: Object.assign({removeDate: new Date()}, params) }
+            ).exec((err) => {
+                if (!err) {
+                    callback && callback();
+                }
             });
-        })
+        }
     });
 };
