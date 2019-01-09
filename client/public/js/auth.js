@@ -159,7 +159,7 @@ $( document ).ready( () => {
                 var el = $(this),
                     data = el.data();
                 if (data.id) {
-                    socket.emit('setDeleted', [data.id]);
+                    socket.emit('setDeleted', room, data.id, Cookies.get('sessionId'));
                 }
             })
         }
@@ -254,8 +254,8 @@ $( document ).ready( () => {
 
     // Работа с кнопкой удалить все
     $('#removeAll').on('click', function (e) {
-        let res = $.map($('.clearTextArea'), obj => $(obj).data('id'));
-        socket.emit('setDeleted', res);
+        //let res = $.map($('.clearTextArea'), obj => $(obj).data('id'));
+        socket.emit('setDeletedMy', room, Cookies.get('sessionId'));
     });
 
     /*JQuery обработчики*/

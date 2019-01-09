@@ -52,6 +52,7 @@ module.exports = io => {
             });
         });
 
+        // получить все сообщения в комнате
         socket.on('receiveHistory', room => {
             MessageModel
                 .find({
@@ -59,7 +60,6 @@ module.exports = io => {
                 })
                 .sort({date: -1})
                 .sort({date: 1})
-                .lean()     //убирает парамтры привязки mongoose
                 .exec((err, messages) => {
                     if (!err){
                         socket.emit('history', messages);
@@ -67,8 +67,23 @@ module.exports = io => {
                 });
         });
 
+        socket.on('setDeletedMy', (room, sessionId) => {
+            MessageModel
+                .find({
+                    room: room,
+                    sessionId: sessionId,
+                    date: {$lt: new Date()}
+                })
+                .exec((err, messages) => {
+                    messages
+
+                    console.log('xx')
+                });
+        });
+
+        // пометить все НЕ СВОИ сообщения выше как прочитанные (удалить через 10 мин)
         socket.on('setRead', (room, sessionId) => {
-            modelUpdateRemoteDate (
+            modelUpdateRemoteDate (true,
                 {
                     date: {$lt: new Date()},
                     room: room,
@@ -76,24 +91,27 @@ module.exports = io => {
                 });
         });
 
-        socket.on('setDeleted', ids => {
-            if (!ids || !ids.length) {
+        // удалить одно сообщение
+        socket.on('setDeleted', (room, id, sessionId) => {
+            if (!id || !sessionId) {
                 return;
             }
-            let apply = function (ids) {
-                modelUpdateRemoteDate({_id: {$in: ids}},
+            let apply = function (id, sessionId) {
+                modelUpdateRemoteDate(false, {_id: id,
+                    sessionId: sessionId},
                     {
                         content: '',
                         isUserDeleted: true
                     },
                     () => {
-                        socket.emit('deleteMsg', ids);
+                        socket.emit('deleteMsg', id);
+                        socket.to(room).emit('deleteMsg', id);
                     });
-            }(ids);
+            }(id, sessionId);
         });
 
-        function modelUpdateRemoteDate (condition, params = {}, callback) {
-            MessageModel.updateMany(
+        function modelUpdateRemoteDate (isMany, condition, params = {}, callback) {
+            MessageModel[!!isMany ? 'updateMany': 'updateOne'](
                 Object.assign({removeDate: null}, condition),
                 { $set: Object.assign({removeDate: new Date()}, params) }
             ).exec((err) => {
