@@ -25,6 +25,9 @@
                 $this.data( type ) != null;
         });
     };
+    $.isObject = function (val) {
+        return val.toString() === '[object Object]';
+    };
     $.date = function(dateObject) {
         var d = new Date(dateObject);
         var day = less10(d.getDate());
@@ -129,6 +132,7 @@ function insertImgInBlock (element, results, single) {
         dataURL: dataURL,
         filename: filename,
         type: 'img',
+        size: Number.isInteger(results.file.size) && Math.ceil(results.file.size/1024),
         defaultHeight: element.data('defaultHeight') || element.height(),
         defaultPlaceholder: element.data('defaultPlaceholder') || element.attr('placeholder'),
         defaultRows: element.data('defaultRows') || element.attr('rows'),
@@ -140,7 +144,7 @@ function insertImgInBlock (element, results, single) {
         $('.chat-message #clearTextArea').show();
     } else {
         css.position = 'relative';
-        var button = $('<span class="close"></span>');
+        var button = $('<span class="close fat-close"></span>');
         button.on('click', function () {
            element.remove();
         });
@@ -154,6 +158,10 @@ function insertImgInBlock (element, results, single) {
 function previewFile () {
     var fileField = $('input[type=file]').get(0);
     if (fileField.files.length) {
+        $('#multifiles').html('');
+        $('#multifiles').hide();
+        $('#inputfield').hide();
+        $('#clearTextArea').hide();
         var files = fileField.files,
             file;
         if (fileField.files.length == 1) {
@@ -171,6 +179,8 @@ function previewFile () {
                 };
                 img.src = _URL.createObjectURL(file);
             });
+            $('#inputfield').show();
+            $('#clearTextArea').show();
         } else {
             for (let i = 0; i < fileField.files.length; i++) {
                 file = files.item(i);
@@ -191,7 +201,6 @@ function previewFile () {
                     });
                 }(file, span, insertImgInBlock);
             }
-            $('#inputfield').hide();
             $('#multifiles').show();
         }
         fileField.value = '';

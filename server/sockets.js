@@ -61,8 +61,28 @@ module.exports = io => {
                 .sort({date: -1})
                 .sort({date: 1})
                 .exec((err, messages) => {
-                    if (!err){
-                        socket.emit('history', messages);
+                    if (!err && Array.isArray(messages)){
+                        let bigMessages = [],
+                            result =  messages.map(item => {
+                               if (item.type == 'img' && item.content.size > 800) {
+                                   bigMessages.push({
+                                       _id: item._id,
+                                       dataURL: item.content.dataURL
+                                   });
+                                   item.content = Object.assign({}, item.content, {
+                                       dataURL: '',
+                                       isLoading: true
+                                   });
+                                   return item;
+                               }
+                               return item;
+                            });
+                        socket.emit('history', result);
+                        if (bigMessages.length) {
+                            setTimeout(() => {
+                                socket.emit('bigMessages', bigMessages);
+                            }, 1000);
+                        }
                     }
                 });
         });
@@ -75,9 +95,31 @@ module.exports = io => {
                     date: {$lt: new Date()}
                 })
                 .exec((err, messages) => {
-                    messages
-
-                    console.log('xx')
+                    if (Array.isArray(messages) && messages.length) {
+                        let ids = messages.map(item => item.id);
+                        let apply = function (ids) {
+                            modelUpdate(true,
+                                {
+                                    _id: {$in: ids}
+                                },
+                                {
+                                    $set: {
+                                        content: '',
+                                        isUserDeleted: true
+                                    }
+                                },
+                                () => {
+                                    modelUpdateRemoteDate(false,
+                                        {
+                                            _id: {$in: ids}
+                                        }, {},
+                                        () => {
+                                            socket.emit('deleteMsg', ids);
+                                            socket.to(room).emit('deleteMsg', ids);
+                                        });
+                                });
+                        }(ids);
+                    }
                 });
         });
 
@@ -97,24 +139,45 @@ module.exports = io => {
                 return;
             }
             let apply = function (id, sessionId) {
-                modelUpdateRemoteDate(false, {_id: id,
-                    sessionId: sessionId},
+                modelUpdate(false,
                     {
-                        content: '',
-                        isUserDeleted: true
+                        _id: id,
+                        sessionId: sessionId
+                    },
+                    {
+                        $set: {
+                            content: '',
+                            isUserDeleted: true
+                        }
                     },
                     () => {
-                        socket.emit('deleteMsg', id);
-                        socket.to(room).emit('deleteMsg', id);
+                        modelUpdateRemoteDate(false,
+                            {
+                                _id: id,
+                                sessionId: sessionId
+                            }, {},
+                            () => {
+                                socket.emit('deleteMsg', id);
+                                socket.to(room).emit('deleteMsg', id);
+                            });
                     });
             }(id, sessionId);
         });
 
         function modelUpdateRemoteDate (isMany, condition, params = {}, callback) {
-            MessageModel[!!isMany ? 'updateMany': 'updateOne'](
+            modelUpdate(isMany,
                 Object.assign({removeDate: null}, condition),
-                { $set: Object.assign({removeDate: new Date()}, params) }
-            ).exec((err) => {
+                { $set: Object.assign({removeDate: new Date()}, params) },
+                () => {
+                    callback && callback();
+                });
+        }
+
+        function modelUpdate (isMany, condition = {}, params = {}, callback) {
+            MessageModel[!!isMany ? 'updateMany': 'updateOne'](
+                condition,
+                params
+            ).exec(err => {
                 if (!err) {
                     callback && callback();
                 }

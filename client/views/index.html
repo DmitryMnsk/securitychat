@@ -31,8 +31,8 @@
                 </div>
 
                 <div class="chat-message clearfix">
-                    <textarea name="message" placeholder="_" rows="1" id="inputfield" tabindex="1"></textarea>
-                    <span class="close" id="clearTextArea"></span>
+                    <textarea name="scmessage" placeholder="_" rows="1" id="inputfield" tabindex="1" autocomplete="off"></textarea>
+                    <span class="close fat-close" id="clearTextArea"></span>
                     <div id="multifiles" style="width:100%; height: auto; display: none"></div>
                 </div>
                 <div class="chat-buttons-block">
@@ -43,10 +43,10 @@
                         <input type="file" onchange="previewFile()" id="file" multiple>
                     </div>
                     <div class="code-block">
-                        <input type="text" placeholder="C" name="code" class="empty" tabindex="2"/>
+                        <input type="text" placeholder="C" name="sccode" class="empty" tabindex="2" autocomplete="off"/>
                     </div>
                     <div class="code-block">
-                        <input type="text" placeholder="U" name="user" class="empty" tabindex="3"/>
+                        <input type="text" placeholder="U" name="scuser" class="empty" tabindex="3" autocomplete="off"/>
                         <button type="button" id="isActive"></button>
                     </div>
                     <span class="close" id="removeAll"></span>

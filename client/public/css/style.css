@@ -347,6 +347,15 @@ button:disabled {
     right: 0;
 }
 
+.fat-close.close {
+    opacity: 1;
+}
+
+.fat-close.close:before, .fat-close.close:after {
+    background-color: red;
+    width: 3px;
+}
+
 .close.small {
     left: -25px;
     top: 13px;
