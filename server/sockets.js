@@ -15,6 +15,7 @@ module.exports = io => {
             console.log('disc');
         });
         socket.on('leave', room => {
+            //todo проверить
            socket.leave(room);
         });
         //todo Доделать что печатает
@@ -134,6 +135,13 @@ module.exports = io => {
                     room: room,
                     sessionId: {$ne: sessionId},
                 });
+
+          /*  socket.rooms
+            console.log(io.sockets.clients((error, clients) => {
+                if (error) throw error;
+                console.log(clients); // => [Anw2LatarvGVVXEIAAAD]
+            }));*/
+
         });
 
         // удалить одно сообщение
