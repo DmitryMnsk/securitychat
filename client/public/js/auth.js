@@ -80,6 +80,7 @@ $( document ).ready( () => {
 
     function socketHistory (messages) {
         $('.chat-history li').remove();
+        previousMsgUser = null;
         let i = messages.length;
         for (let message of messages) {
             addMessage(message,!--i, true);
