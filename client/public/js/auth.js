@@ -44,9 +44,16 @@ $( document ).ready( () => {
         ids.forEach(id => {
             let li = $(".chat-history li").filterByData('id', id);
             if (li.length) {
-                li.find('.message-data').remove();
-                li.find('.message.my-message').html('removed');
-                li.find('.clearTextArea').remove();
+                li.html('<hr/><div class="message my-message" dir="auto">removed</div>');
+                if (li.next().length && li.next().is('li')) {
+                    let nextLi = li.next();
+                    if (nextLi.find('.message-data-name').length) {
+                        nextLi.find('.message-data-name').show();
+                    }
+                    if (!nextLi.find('hr').length) {
+                        nextLi.prepend('<hr/>');
+                    }
+                }
             }
         })
     }
@@ -73,8 +80,6 @@ $( document ).ready( () => {
     }
 
     function socketHistory (messages) {
-        console.log(new Date(), 5);
-        //todo сделать проверку на содержимое, картинки загружать отдельным эмитом, вместо них лоадеры временно
         $('.chat-history li').remove();
         let i = messages.length;
         for (let message of messages) {
@@ -143,7 +148,7 @@ $( document ).ready( () => {
 
         let cleanBtnShow = showTruth && (message.sessionId === Cookies.get('sessionId')),
             isRemoved = showTruth && !!message.isUserDeleted,
-            showHrLine = previousMsgUser && (previousMsgUser !== message.sessionId);
+            showHrLine = previousMsgUser !== message.sessionId;
 
         previousMsgUser = !isRemoved && message.sessionId;
 
@@ -152,7 +157,7 @@ $( document ).ready( () => {
                 ${showTruth && !isRemoved ? 
                 ((showHrLine ? '<hr/>': '') +
                 '<div class="message-data">' +
-                    (showHrLine ? '<span class="message-data-name">' + message.username + '</span>': '') +
+                    '<span class="message-data-name" style="display: ' + (showHrLine ? 'inline': 'none') + '">' + message.username + '</span>' +
                     '<span class="message-data-time">' + message.date + '</span>' +
                 '</div>' +
                     (cleanBtnShow ? '<span class="close small clearTextArea"></span>' : '')): ''}
