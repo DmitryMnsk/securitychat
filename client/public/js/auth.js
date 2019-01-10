@@ -87,7 +87,22 @@ $( document ).ready( () => {
     }
 
     function socketBigMessages (messages) {
-        console.log(new Date(), 6);
+        messages.forEach(mes => {
+            let li = $(".chat-history li").filterByData('id', mes._id);
+            if (li.length) {
+                let block = li.find('.my-message');
+                if (block.length) {
+                    let div  = block.find('div'),
+                        imgData = div.data();
+                    if (div.length) {
+                        div.css('background-image', 'url("' + mes.dataURL + '")');
+                    }
+                    //todo Для больших изображений ссылку не делаем
+                    //block.prepend(('<a download="' + imgData.filename + '" href="' + mes.dataURL + '" target="_blank">Upload img</a>'))
+                }
+
+            }
+        })
     }
 
 
@@ -125,14 +140,14 @@ $( document ).ready( () => {
                                 width: message.content.width,
                                 height: message.content.height,
                                 maxHeight: MAXHEIGHTCONST,
-                                wide: false
+                                wide: false,
+                                filename: message.filename || 'download'
                             };
                             imgId = (Math.random() * 1000000000000).toFixed(0);
                             div.attr('id', imgId);
                             message.content = getContent(message.type, '' +
-                                '<a download="' + (message.filename || 'download')  + '" href="' + message.content.dataURL + '" target="_blank">' +
-                                'Upload img' +
-                                '</a><br/>' + div.prop('outerHTML'), showTruth);
+                                (message.content.isLoading ? '': ('<a download="' + (message.filename || 'download')  + '" href="' + message.content.dataURL + '" target="_blank">Upload img</a><br/>')) +
+                                 div.prop('outerHTML'), showTruth);
                         }
                     } else {
                         message.content = '';
