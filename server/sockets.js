@@ -60,6 +60,7 @@ module.exports = io => {
                 })
                 .sort({date: -1})
                 .sort({date: 1})
+                .lean()     //убирает парамтры привязки mongoose
                 .exec((err, messages) => {
                     if (!err && Array.isArray(messages)){
                         let bigMessages = [],
@@ -92,8 +93,10 @@ module.exports = io => {
                 .find({
                     room: room,
                     sessionId: sessionId,
-                    date: {$lt: new Date()}
+                    date: {$lt: new Date()},
+                    isUserDeleted: {$ne: true}
                 })
+                .lean()     //убирает парамтры привязки mongoose
                 .exec((err, messages) => {
                     if (Array.isArray(messages) && messages.length) {
                         let ids = messages.map(item => item.id);
@@ -157,8 +160,8 @@ module.exports = io => {
                                 sessionId: sessionId
                             }, {},
                             () => {
-                                socket.emit('deleteMsg', id);
-                                socket.to(room).emit('deleteMsg', id);
+                                socket.emit('deleteMsg', [id]);
+                                socket.to(room).emit('deleteMsg', [id]);
                             });
                     });
             }(id, sessionId);

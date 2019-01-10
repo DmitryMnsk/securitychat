@@ -104,9 +104,11 @@ body {
 .chat .chat-history .message-data {
     margin-bottom: 15px;
 }
+.chat .chat-history .message-data-name {
+    padding-right: 6px;
+}
 .chat .chat-history .message-data-time {
     color: #a8aab1;
-    padding-left: 6px;
     font-size: 80%;
 }
 .chat .chat-history .message {

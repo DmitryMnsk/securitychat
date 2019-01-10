@@ -8,7 +8,8 @@ $( document ).ready( () => {
         userName = null,
         isActive = false,
         isActiveInterval = null,
-        MAXHEIGHTCONST = 120;
+        MAXHEIGHTCONST = 120,
+        previousMsgUser = null;
 
     document.title = `${room}/Marketing target	Smartphones`;
 
@@ -27,6 +28,7 @@ $( document ).ready( () => {
         addMessage(message, true);
     });
     socket.on('history', socketHistory);
+    socket.on('bigMessages', socketBigMessages);
 
     socket.on('deleteMsg', deleteMsg);
 
@@ -40,12 +42,11 @@ $( document ).ready( () => {
 
     function doDeleted(ids) {
         ids.forEach(id => {
-            let span = $(".chat-history span.clearTextArea").filterByData('id', id);
-            if (span.length) {
-                let par = span.parent('li');
-                par.find('.message-data').remove();
-                par.find('.message.my-message').html('removed by author');
-                par.find('.clearTextArea').hide();
+            let li = $(".chat-history li").filterByData('id', id);
+            if (li.length) {
+                li.find('.message-data').remove();
+                li.find('.message.my-message').html('removed');
+                li.find('.clearTextArea').remove();
             }
         })
     }
@@ -54,12 +55,12 @@ $( document ).ready( () => {
         socket.emit('join', room);
 
         if (Cookies.get('userNameVal')) {
-            $("input[name='user']").val(Cookies.get('userNameVal') || '');
+            $("input[name='scuser']").val(Cookies.get('userNameVal') || '');
             applyUser();
         }
 
         if (Cookies.get('codeVal')) {
-            $("input[name='code']").val(Cookies.get('codeVal'));
+            $("input[name='sccode']").val(Cookies.get('codeVal'));
             if (Cookies.get('isActive')) {
                 $('#isActive').addClass('active');
                 isActive = true;
@@ -72,6 +73,8 @@ $( document ).ready( () => {
     }
 
     function socketHistory (messages) {
+        console.log(new Date(), 5);
+        //todo сделать проверку на содержимое, картинки загружать отдельным эмитом, вместо них лоадеры временно
         $('.chat-history li').remove();
         let i = messages.length;
         for (let message of messages) {
@@ -79,94 +82,120 @@ $( document ).ready( () => {
         }
     }
 
+    function socketBigMessages (messages) {
+        console.log(new Date(), 6);
+    }
+
+
+    function getTextContentFromMessage (message, showTruth) {
+        let result = getContent(message.type, encodeHTML(message.content), showTruth);
+        return result && result.replace && result.replace(/\n/g,'<br/>') || result;
+    }
+
     function addMessage(message, scroll, history) {
         let codeServer = getContent('code', message.code || '');
         let showTruth = !!code && (code === codeServer);
-        message.date      = getContent('date', $.date(message.date), showTruth);
-        message.username  = getContent(null, message.username, showTruth);
-        var imgId, imgData;
+        var imgId, imgData, htmlData = {};
+
+        if (showTruth) {
+            message.date = getContent('date', $.date(message.date), showTruth);
+            message.username = getContent(null, message.username, showTruth);
+            htmlData.id = message._id;
+        }
+
         if (message.type) {
             switch (message.type) {
                 case 'img':
-                    if (typeof message.content == 'object') {
-                        var div = $("<div></div>").css({
-                            backgroundImage: "url(" + message.content.dataURL + ")",
-                            height: MAXHEIGHTCONST,
-                            backgroundSize: 'contain',
-                            backgroundRepeat: 'no-repeat',
-                            cursor: 'pointer'
-                        });
-                        imgData = {
-                            width: message.content.width,
-                            height: message.content.height,
-                            maxHeight: MAXHEIGHTCONST,
-                            wide: false
-                        };
-                        imgId = (Math.random() * 1000000000000).toFixed(0);
-                        div.attr('id', imgId);
-                        message.content = getContent(message.type, '' +
-                            '<a download="' + (message.filename || 'download')  + '" href="' + message.content.dataURL + '" target="_blank">' +
-                            'Скачать картинку' +
-                            '</a><br/>' + div.prop('outerHTML'), showTruth);
+                    if ($.isObject(message.content)) {
+                        if (!showTruth) {
+                            message.content = getContent(message.type, null, showTruth);
+                        } else {
+                            var div = $("<div></div>").css({
+                                backgroundImage: "url(" + (message.content.isLoading ? './assets/icons/loader.gif' : message.content.dataURL) + ")",
+                                height: MAXHEIGHTCONST,
+                                backgroundSize: 'contain',
+                                backgroundRepeat: 'no-repeat',
+                                cursor: 'pointer'
+                            });
+                            imgData = {
+                                width: message.content.width,
+                                height: message.content.height,
+                                maxHeight: MAXHEIGHTCONST,
+                                wide: false
+                            };
+                            imgId = (Math.random() * 1000000000000).toFixed(0);
+                            div.attr('id', imgId);
+                            message.content = getContent(message.type, '' +
+                                '<a download="' + (message.filename || 'download')  + '" href="' + message.content.dataURL + '" target="_blank">' +
+                                'Upload img' +
+                                '</a><br/>' + div.prop('outerHTML'), showTruth);
+                        }
                     } else {
                         message.content = '';
                     }
                     break;
                 default:
-                    message.content = getContent(message.type, encodeHTML(message.content), showTruth);
+                    message.content = getTextContentFromMessage(message, showTruth);
             }
         } else {
-            message.content = getContent(message.type, encodeHTML(message.content), showTruth);
+            message.content = getTextContentFromMessage(message, showTruth);
         }
-        message.content = message.content && message.content.replace && message.content.replace(/\n/g,'<br/>') || message.content;
-        let cleanCondition = showTruth && (message.sessionId === Cookies.get('sessionId'));
+
+        let cleanBtnShow = showTruth && (message.sessionId === Cookies.get('sessionId')),
+            isRemoved = showTruth && !!message.isUserDeleted,
+            showHrLine = previousMsgUser && (previousMsgUser !== message.sessionId);
+
+        previousMsgUser = !isRemoved && message.sessionId;
+
         var html = `
             <li>
-                ${showTruth ? 
-                ('<hr/>' +
+                ${showTruth && !isRemoved ? 
+                ((showHrLine ? '<hr/>': '') +
                 '<div class="message-data">' +
-                    '<span class="message-data-name">' + message.username + '</span>' +
+                    (showHrLine ? '<span class="message-data-name">' + message.username + '</span>': '') +
                     '<span class="message-data-time">' + message.date + '</span>' +
                 '</div>' +
-                    (cleanCondition ? '<span class="close small clearTextArea"></span>' : '')): ''} 
-                <div class="message my-message" dir="auto">${message.content}</div>
+                    (cleanBtnShow ? '<span class="close small clearTextArea"></span>' : '')): ''}
+                ${showTruth && isRemoved ? 
+                    ('<hr/><div class="message my-message" dir="auto">removed</div>'): 
+                    ('<div class="message my-message" dir="auto">' + message.content + '</div>')}
             </li>`;
 
         html = $(html);
-        if (imgId) {
-            let el = html.find('#' + imgId);
-            el.data(imgData);
-            el.on('click', function () {
-                var el = $(this),
-                    width = $(this).parent('.my-message').width(),
-                    data = el.data();
-                if (!data.wide) {
-                    el.width(width);
-                    el.height(data.height * width / data.width);
-                } else {
-                    el.height(data.maxHeight);
-                }
-                el.data('wide', !data.wide);
-            });
-        }
+        html.data(htmlData);
 
-        let deleteBtn = html.find('.clearTextArea');
-        if (deleteBtn.length) {
-            deleteBtn.data({
-                id: message._id
-            });
-            deleteBtn.on('click', function () {
-                var el = $(this),
-                    data = el.data();
-                if (data.id) {
-                    socket.emit('setDeleted', room, data.id, Cookies.get('sessionId'));
-                }
-            })
+        if (showTruth) {
+            if (imgId) {
+                let el = html.find('#' + imgId);
+                el.data(imgData);
+                el.on('click', function () {
+                    var el = $(this),
+                        width = $(this).parent('.my-message').width(),
+                        data = el.data();
+                    if (!data.wide) {
+                        el.width(width);
+                        el.height(data.height * width / data.width);
+                    } else {
+                        el.height(data.maxHeight);
+                    }
+                    el.data('wide', !data.wide);
+                });
+            }
+
+            let deleteBtn = html.find('.clearTextArea');
+            if (deleteBtn.length) {
+                deleteBtn.on('click', function () {
+                    var el = $(this).parent('li'),
+                        data = el && el.data();
+                    if (data && data.id) {
+                        socket.emit('setDeleted', room, data.id, Cookies.get('sessionId'));
+                    }
+                })
+            }
         }
         html.appendTo('.chat-history ul');
-        if (showTruth && message.isUserDeleted) {
-            doDeleted([message._id]);
-        }
+
+        // Скроллинг вниз
         var chatTop = $('.chat-message').offset().top,
             win = $(window);
         if (scroll && (history || (win.scrollTop() <= chatTop) && (win.scrollTop() + win.height() >= chatTop)))
@@ -205,7 +234,7 @@ $( document ).ready( () => {
 
     // Крестик удаления картинки из textarean
     $('.chat-message span#clearTextArea').on('click', function (e) {
-      var textarea = $("textarea[name='message']"),
+      var textarea = $("textarea[name='scmessage']"),
           data = textarea.data();
         textarea.height(data.defaultHeight || 'auto');
         textarea.attr('placeholder', data.defaultPlaceholder || '');
@@ -218,7 +247,7 @@ $( document ).ready( () => {
 
     // Работа с кодом
     $('button.resetCode').on('click', resetCode);
-    $("input[name='code']").on('keyup', (e) => {
+    $("input[name='sccode']").on('keyup', (e) => {
         if (e.keyCode === 13) {
             applyCode(e);
         }
@@ -227,7 +256,7 @@ $( document ).ready( () => {
     });
 
     // Работа с пользователем
-    $("input[name='user']").on('keyup', (e) => {
+    $("input[name='scuser']").on('keyup', (e) => {
         if (e.keyCode === 13) {
             applyUser(e);
         }
@@ -277,7 +306,7 @@ $( document ).ready( () => {
 
 
     function applyUser () {
-        let input = $("input[name='user']"),
+        let input = $("input[name='scuser']"),
             val = input.val().trim() || '';
         if (val === userName) {
             return;
@@ -289,7 +318,7 @@ $( document ).ready( () => {
 
     function applyCode () {
         $.changeFavicon('./assets/icons/clean.png');
-        let input = $("input[name='code']"),
+        let input = $("input[name='sccode']"),
             val = input.val().trim() || '';
         if (val === code) {
             return;
@@ -317,15 +346,15 @@ $( document ).ready( () => {
         code = null;
         userName = null;
         isActive = false;
-        $("input[name='code']").val('');
-        $("input[name='user']").val('');
+        $("input[name='sccode']").val('');
+        $("input[name='scuser']").val('');
         $('#isActive').removeClass('active');
         Cookies.remove('userNameVal');
         Cookies.remove('codeVal');
         Cookies.remove('isActive');
         $('#inputfield').val('');
-        getClassForInput($("input[name='code']"));
-        getClassForInput($("input[name='user']"));
+        getClassForInput($("input[name='sccode']"));
+        getClassForInput($("input[name='scuser']"));
         $('.chat-history li').remove();
         socket.emit('receiveHistory', room);
     }
@@ -342,7 +371,7 @@ $( document ).ready( () => {
             return;
         }
 
-        sendMessage($("textarea[name='message']"), function () {
+        sendMessage($("textarea[name='scmessage']"), function () {
             this.val('');
             var data = this.data();
             this.height(data.defaultHeight || 'auto');
@@ -356,7 +385,7 @@ $( document ).ready( () => {
     }
 
     function getCryptoCode () {
-        let cryptoCode = $("input[name='code']").val().trim();
+        let cryptoCode = $("input[name='sccode']").val().trim();
         if (!cryptoCode) {
             cryptoCode = location.pathname.substr(1);
         }
@@ -380,7 +409,8 @@ $( document ).ready( () => {
                         width: data.width,
                         height: data.height,
                         filename: data.filename,
-                        dataURL: data.dataURL
+                        dataURL: data.dataURL,
+                        size: data.size   // в килобайтах
                     };
                     break;
                 default:
@@ -395,7 +425,7 @@ $( document ).ready( () => {
             }
             content = applyCrypt(selector.val().trim());
         }
-        let cryptoCode = $("input[name='code']").val().trim();
+        let cryptoCode = $("input[name='sccode']").val().trim();
         socket.emit('msg', {
             type: type,
             code: applyCrypt(getCryptoCode()),
@@ -403,7 +433,7 @@ $( document ).ready( () => {
             username: applyCrypt(userName || 'anon'),
             sessionId: Cookies.get('sessionId')
         }, room);
-        if (typeof callback == 'function') {
+        if ($.isFunction(callback)) {
             callback.call(selector);
         }
     }
