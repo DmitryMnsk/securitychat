@@ -99,7 +99,7 @@ module.exports = io => {
                 .lean()     //убирает парамтры привязки mongoose
                 .exec((err, messages) => {
                     if (Array.isArray(messages) && messages.length) {
-                        let ids = messages.map(item => item.id);
+                        let ids = messages.map(item => item._id);
                         let apply = function (ids) {
                             modelUpdate(true,
                                 {

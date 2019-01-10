@@ -37,7 +37,6 @@ $( document ).ready( () => {
             return;
         }
         doDeleted(ids);
-
     }
 
     function doDeleted(ids) {
