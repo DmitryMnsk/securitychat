@@ -420,6 +420,9 @@ $( document ).ready( () => {
     }
 
     function send (e) {
+        setTimeout(()=> {
+            $('#inputfield').focus()
+        }, 100);
         if ($("#multifiles:visible").length) {
             $("#multifiles div").each(function(i, img) {
                 sendMessage($(this), function () {
