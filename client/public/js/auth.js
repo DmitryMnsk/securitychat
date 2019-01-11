@@ -172,7 +172,7 @@ $( document ).ready( () => {
                 ${showTruth && !isRemoved ? 
                 ((showHrLine ? '<hr/>': '') +
                 '<div class="message-data">' +
-                    '<span class="message-data-name" style="display: ' + (showHrLine ? 'inline': 'none') + '">' + message.username + '</span>' +
+                    '<span class="message-data-name" style="display: ' + (showHrLine ? 'inline-block': 'none') + '">' + message.username + '</span>' +
                     '<span class="message-data-time">' + message.date + '</span>' +
                 '</div>' +
                     (cleanBtnShow ? '<span class="close small clearTextArea"></span>' : '')): ''}
