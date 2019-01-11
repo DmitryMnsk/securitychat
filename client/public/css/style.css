@@ -140,7 +140,7 @@ li.own-message .message-data, li.own-message .message.my-message {
     text-align: right;
 }
 
-li .close.small.clearTextArea {
+li.own-message .close.small.clearTextArea {
     left: auto;
     right: -25px;
 }

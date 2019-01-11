@@ -44,6 +44,9 @@ $( document ).ready( () => {
             let li = $(".chat-history li").filterByData('id', id);
             if (li.length) {
                 li.html('<hr/><div class="message my-message" dir="auto">removed</div>');
+                if (li.hasClass('own-message')) {
+                    li.removeClass('own-message');
+                }
                 if (li.next().length && li.next().is('li')) {
                     let nextLi = li.next();
                     if (nextLi.find('.message-data-name').length) {
