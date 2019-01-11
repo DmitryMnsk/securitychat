@@ -9,7 +9,8 @@ $( document ).ready( () => {
         isActive = false,
         isActiveInterval = null,
         MAXHEIGHTCONST = 120,
-        previousMsgUser = null;
+        previousMsgUser = null,
+        resetTimeout = null;
 
     document.title = `${room}/Marketing target	Smartphones`;
 
@@ -31,6 +32,22 @@ $( document ).ready( () => {
     socket.on('bigMessages', socketBigMessages);
 
     socket.on('deleteMsg', deleteMsg);
+    socket.on('resetAllFromOut', resetAllFromOut);
+
+
+    function resetAllFromOut () {
+        $('button.resetCode').addClass('red');
+        if (!resetTimeout) {
+            resetTimeout = setTimeout(()=> {
+                $('button.resetCode').removeClass('red');
+                resetCode();
+                setTimeout(()=> {
+                    resetTimeout = null;
+                    location.pathname = '';
+                });
+            }, 5 * 1000);
+        }
+    }
 
     function deleteMsg (ids) {
         if (!ids || !ids.length) {
@@ -274,6 +291,7 @@ $( document ).ready( () => {
 
     // Работа с кодом
     $('button.resetCode').on('click', resetCode);
+    $('button.resetAll').on('click', resetAll);
     $("input[name='sccode']").on('keyup', (e) => {
         if (e.keyCode === 13) {
             applyCode(e);
@@ -384,6 +402,21 @@ $( document ).ready( () => {
         getClassForInput($("input[name='scuser']"));
         $('.chat-history li').remove();
         socket.emit('receiveHistory', room);
+    }
+
+    function resetAll (e) {
+        let resetBtn = $('button.resetCode');
+        if (resetBtn.hasClass('red')) {
+            resetBtn.removeClass('red');
+            clearTimeout(resetTimeout);
+            resetTimeout = null;
+        } else {
+            $('button.resetAll').addClass('red');
+            socket.emit('resetAll', room);
+            setTimeout(()=> {
+                $('button.resetAll').removeClass('red');
+            }, 5 * 1000);
+        }
     }
 
     function send (e) {

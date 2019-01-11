@@ -108,6 +108,7 @@ body {
     padding-right: 6px;
     height: 25px;
     display: inline-block;
+    font-weight: bold;
 }
 .chat .chat-history .message-data-time {
     color: #a8aab1;
@@ -416,73 +417,66 @@ label.for-file {
     background-color: grey;
 }
 
-.code-block, .file-block {
-    display: inline-block;
-    position: relative;
-    float: left;
-}
-
-.file-block {
-    margin-right: 10px;
-}
-
-.code-block > * {
-    width: 30px;
-    height: 30px;
-}
-.code-block button {
-    padding: 5px;
-    border: 0;
+.warning-btn {
     cursor: pointer;
-}
-.code-block input {
+    position: relative;
     border: 0;
-}
-.code-block input.empty {
-    background: #ff000012;
-}
-.code-block input {
-    width: 70px;
-    margin-left: 20px;
-}
-.code-block button.green {
-    background-color: rgba(134, 187, 113, 0.4);
+    margin: 0 30px;
+    height: 40px;
+    width: 40px;
 }
 
+.red {
+    background-color: #ff00008f;
+}
+
+.chat-buttons-block {
+    position: relative;
+    margin-top: 20px;
+    text-align: left;
+}
+.chat-buttons-subblock {
+    display: inline-block;
+    margin-bottom: 5px;
+}
 #submit {
     cursor: pointer;
     border: 0;
     margin-right: 30px;
-    float: left;
     height: 30px;
     width: 120px;
     background: none;
 }
-
-.resetCode {
-    cursor: pointer;
-    position: relative;
-    top: -10px;
+.file-block {
+    margin-right: 10px;
+}
+.code-block, .file-block {
+    display: inline-block;
+}
+.code-block > * {
+    width: 70px;
+    margin: 0 10px;
+    height: 30px;
     border: 0;
-    margin: 0 30px;
-    float: left;
-    height: 50px;
-    width: 50px;
+}
+
+.code-block input.empty {
+    background: #ff000012;
 }
 
 #isActive {
     position: relative;
+    padding: 5px;
     cursor: pointer;
     width: 20px;
     height: 20px;
     border-radius: 20px;
-    display: inline-block;
     background-color: grey;
+    border: 0;
+}
+#isActive.green {
+    background-color: rgba(134, 187, 113, 0.4);
 }
 #isActive.active {
     background-color: rgba(134, 187, 113, 0.4);
-}
-.chat-buttons-block {
-    position: relative;
-    margin-top: 20px;
 }

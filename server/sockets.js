@@ -11,10 +11,18 @@ module.exports = io => {
             socket.room = room;
             socket.join(room);
         });
-        socket.on('disconnect', () => {
-            console.log('disc');
+
+        socket.on('resetAll', room => {
+            socket.to(room).emit('resetAllFromOut');
         });
-        socket.on('leave', room => {
+
+
+        socket.on('disconnect', () => {
+            if (socket.room) {
+                socket.leave(socket.room);
+            }
+        });
+        /*socket.on('leave', room => {
             //todo проверить
            socket.leave(room);
         });
@@ -28,7 +36,7 @@ module.exports = io => {
             socket.broadcast.emit('stop typing', {
                 username: socket.username
             });
-        });
+        });*/
 
         socket.on('msg', (message, room) => {
             if (!room) {
