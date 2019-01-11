@@ -136,6 +136,10 @@ body {
     color: #582f2f;
 }
 
+li.own-message {
+    background-color: #00ffff0f;
+}
+
 li.own-message .message-data, li.own-message .message.my-message {
     text-align: right;
 }
