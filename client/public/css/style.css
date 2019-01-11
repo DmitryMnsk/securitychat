@@ -135,6 +135,16 @@ body {
     background: none;
     color: #582f2f;
 }
+
+li.own-message .message-data, li.own-message .message.my-message {
+    text-align: right;
+}
+
+li .close.small.clearTextArea {
+    left: auto;
+    right: -25px;
+}
+
 .online, .offline, .me {
     margin-right: 3px;
     font-size: 10px;

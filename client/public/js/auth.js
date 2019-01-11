@@ -109,7 +109,11 @@ $( document ).ready( () => {
 
     function getTextContentFromMessage (message, showTruth) {
         let result = getContent(message.type, encodeHTML(message.content), showTruth);
-        return result && result.replace && result.replace(/\n/g,'<br/>') || result;
+        result = result && result.replace && result.replace(/\n/g,'<br/>') || result;
+        if (!!~['http:', 'https:'].indexOf(result.substring(0, result.indexOf('/')))) {
+            result = '<a href="' + result + '" target="_blank">' + result + '</a>';
+        }
+        return result;
     }
 
     function addMessage(message, scroll, history) {
@@ -168,7 +172,7 @@ $( document ).ready( () => {
         previousMsgUser = !isRemoved && message.sessionId;
 
         var html = `
-            <li>
+            <li class="${!isRemoved && cleanBtnShow ? 'own-message': ''}">
                 ${showTruth && !isRemoved ? 
                 ((showHrLine ? '<hr/>': '') +
                 '<div class="message-data">' +
