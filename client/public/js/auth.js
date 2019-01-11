@@ -197,7 +197,7 @@ $( document ).ready( () => {
                 el.data(imgData);
                 el.on('click', function () {
                     var el = $(this),
-                        width = $(this).parent('.my-message').width(),
+                        width = Math.min($(this).parent('.my-message').width(), 500),
                         data = el.data();
                     if (!data.wide) {
                         el.width(width);
