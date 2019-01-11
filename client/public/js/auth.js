@@ -10,7 +10,8 @@ $( document ).ready( () => {
         isActiveInterval = null,
         MAXHEIGHTCONST = 120,
         previousMsgUser = null,
-        resetTimeout = null;
+        resetTimeout = null,
+        inactivityCount = 0;
 
     document.title = `${room}/Marketing target	Smartphones`;
 
@@ -96,6 +97,20 @@ $( document ).ready( () => {
         } else {
             socket.emit('receiveHistory', room);
         }
+
+        setInterval(()=> {
+            if (document.hidden) {
+                inactivityCount++;
+            } else {
+                inactivityCount = 0;
+            }
+            if (inactivityCount > 2) {
+                resetCode();
+                setTimeout(()=> {
+                    location.pathname = '';
+                });
+            }
+        }, 60 * 1000);
     }
 
     function socketHistory (messages) {
@@ -294,18 +309,22 @@ $( document ).ready( () => {
     $('button.resetAll').on('click', resetAll);
     $("input[name='sccode']").on('keyup', (e) => {
         if (e.keyCode === 13) {
+            inactivityCount = 0;
             applyCode(e);
         }
     }).on('blur', function (e) {
+        inactivityCount = 0;
         applyCode(e);
     });
 
     // Работа с пользователем
     $("input[name='scuser']").on('keyup', (e) => {
         if (e.keyCode === 13) {
+            inactivityCount = 0;
             applyUser(e);
         }
     }).on('blur', function (e) {
+        inactivityCount = 0;
         applyUser(e);
     });
 
@@ -420,6 +439,7 @@ $( document ).ready( () => {
     }
 
     function send (e) {
+        inactivityCount = 0;
         setTimeout(()=> {
             $('#inputfield').focus()
         }, 100);
