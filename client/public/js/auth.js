@@ -45,7 +45,7 @@ $( document ).ready( () => {
                 setTimeout(()=> {
                     resetTimeout = null;
                     location.pathname = '';
-                });
+                }, 100);
             }, 5 * 1000);
         }
     }
@@ -108,7 +108,7 @@ $( document ).ready( () => {
                 resetCode();
                 setTimeout(()=> {
                     location.pathname = '';
-                });
+                }, 100);
             }
         }, 60 * 1000);
     }
