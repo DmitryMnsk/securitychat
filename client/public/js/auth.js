@@ -257,7 +257,7 @@ $( document ).ready( () => {
         // Скроллинг вниз
         var chatTop = $('.chat-message').offset().top,
             win = $(window);
-        if (scroll && (history || (win.scrollTop() <= chatTop) && (win.scrollTop() + win.height() >= chatTop)))
+        if (scroll && (history || ((win.scrollTop() + win.height()) >= (chatTop - 300)) || (win.scrollTop() + win.height() >= chatTop)))
             doScroll();
     }
 

@@ -121,7 +121,7 @@ module.exports = io => {
                                     }
                                 },
                                 () => {
-                                    modelUpdateRemoteDate(false,
+                                    modelUpdateRemoteDate(true,
                                         {
                                             _id: {$in: ids}
                                         }, {},
