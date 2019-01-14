@@ -11,7 +11,8 @@ $( document ).ready( () => {
         MAXHEIGHTCONST = 120,
         previousMsgUser = null,
         resetTimeout = null,
-        inactivityCount = 0;
+        inactivityCount = 0,
+        inactivityCountMax = 2;
 
     document.title = `${room}/Marketing target	Smartphones`;
 
@@ -79,6 +80,7 @@ $( document ).ready( () => {
     }
 
     function socketConnected (msg) {
+        inactivityCountMax = 2;
         socket.emit('join', room);
 
         if (Cookies.get('userNameVal')) {
@@ -92,6 +94,7 @@ $( document ).ready( () => {
                 $('#isActive').addClass('active');
                 isActive = true;
                 setIsActiveInterval(true);
+                inactivityCountMax = 30;
             }
             applyCode();
         } else {
@@ -104,7 +107,7 @@ $( document ).ready( () => {
             } else {
                 inactivityCount = 0;
             }
-            if (inactivityCount > 2) {
+            if (inactivityCount > inactivityCountMax) {
                 resetCode();
                 setTimeout(()=> {
                     location.pathname = '';
@@ -339,8 +342,10 @@ $( document ).ready( () => {
         isActive = value;
         if (value) {
             Cookies.set('isActive', true);
+            inactivityCountMax = 30;
         } else {
             Cookies.remove('isActive');
+            inactivityCountMax = 2;
         }
         setIsActiveInterval(value);
     });
