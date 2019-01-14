@@ -257,6 +257,12 @@ $( document ).ready( () => {
         }
         html.appendTo('.chat-history ul');
 
+        html.Emoji({
+            path:  'assets/img/apple72/',
+            class: 'emoji',
+            ext:   'png'
+        });
+
         // Скроллинг вниз
         var chatTop = $('.chat-message').offset().top,
             win = $(window);

@@ -28,7 +28,7 @@ module.exports = io => {
         });
         //todo Доделать что печатает
         socket.on('typing', function () {
-            socket.broadcast.emit('typing', {
+            socket.broadcast.emit('typing', {               socket.broadcast.emit - всем кроме текущего сокета
                 username: socket.username
             });
         });
