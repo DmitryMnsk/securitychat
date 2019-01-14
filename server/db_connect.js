@@ -1,5 +1,6 @@
 "use strict";
 const MessageModel = require('./models/messages.model');
+const ImageModel = require('./models/img.model');
 const log = require('./logservice');
 const utils = require('./utils');
 
@@ -28,7 +29,17 @@ module.exports = mongoose => {
             .deleteMany()
             .exec(err => {
                 if (!err) {
-                    log.addRec(`records before ${a} remooved`);
+                    log.addRec(`records MessageModel before ${a} remooved`);
+                } else {
+                    log.addRec(err);
+                }
+            });
+        ImageModel
+            .find({date: {$lte: a}})
+            .deleteMany()
+            .exec(err => {
+                if (!err) {
+                    log.addRec(`records ImageModel before ${a} remooved`);
                 } else {
                     log.addRec(err);
                 }

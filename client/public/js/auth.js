@@ -232,7 +232,7 @@ $( document ).ready( () => {
                 el.data(imgData);
                 el.on('click', function () {
                     var el = $(this),
-                        width = Math.min($(this).parent('.my-message').width(), 500),
+                        width = Math.min($(this).parent('.my-message').width(), 800),
                         data = el.data();
                     if (!data.wide) {
                         el.width(width);
@@ -257,11 +257,13 @@ $( document ).ready( () => {
         }
         html.appendTo('.chat-history ul');
 
-        html.Emoji({
-            path:  'assets/img/apple72/',
-            class: 'emoji',
-            ext:   'png'
-        });
+        if (showTruth && !imgId) {
+            html.Emoji({
+                path: 'assets/img/apple72/',
+                class: 'emoji',
+                ext: 'png'
+            });
+        }
 
         // Скроллинг вниз
         var chatTop = $('.chat-message').offset().top,

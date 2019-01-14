@@ -1,6 +1,7 @@
 "use strict";
 
 const MessageModel = require('./models/messages.model');
+const ImageModel = require('./models/img.model');
 
 module.exports = io => {
     io.on('connection', (socket) => {
@@ -42,6 +43,28 @@ module.exports = io => {
             if (!room) {
                 return;
             }
+
+            if ((message.content.toString() === '[object Object]') &&
+                message.type === 'img'
+            ) {
+                ImageModel.create({
+                    content: message.content.dataURL,
+                    date: new Date()
+                }, (err, result) => {
+                    if (err) return console.error("MessageModel", err);
+                    message.content = Object.assign({}, message.content, {
+                        dataURL: '',
+                        isLoading: true,
+                        imgId: result._id
+                    });
+                    saveMsg(message, room, result);
+                });
+            } else {
+                saveMsg(message, room);
+            }
+        });
+
+        function saveMsg (message, room, resultImg) {
             const obj = {
                 room: room,
                 date: new Date(),
@@ -54,12 +77,33 @@ module.exports = io => {
             /*Это равносильно тому что ниже
              const model = new MessageModel(obj);
              model.save();*/
-            MessageModel.create(obj, (err, result) => {
-                if (err) return console.error("MessageModel", err);
-                socket.emit('message', result, true);           //отправка себе
-                socket.to(room).emit('message', result);                       //отправка остальным
-            });
-        });
+            let fun = function (resultImg) {
+                MessageModel.create(obj, (err, result) => {
+                    if (err) return console.error("MessageModel", err);
+                    socket.emit('message', result, true);           //отправка себе
+                    socket.to(room).emit('message', result);                       //отправка остальным
+
+                    if (resultImg) {
+                        const bigMessages = [];
+                        bigMessages.push({
+                            _id: result._id,
+                            dataURL: resultImg.content.toString()
+                        });
+                        socket.emit('bigMessages', bigMessages);
+                        socket.to(room).emit('bigMessages', bigMessages);
+                        modelUpdate(ImageModel, false,
+                            {
+                                _id: resultImg._id
+                            },
+                            {
+                                $set: {
+                                    mainId: result._id
+                                }
+                            });
+                    }
+                });
+            } (resultImg);
+        }
 
         // получить все сообщения в комнате
         socket.on('receiveHistory', room => {
@@ -72,26 +116,29 @@ module.exports = io => {
                 .lean()     //убирает парамтры привязки mongoose
                 .exec((err, messages) => {
                     if (!err && Array.isArray(messages)){
-                        let bigMessages = [],
-                            result =  messages.map(item => {
-                               if (item.type == 'img' && item.content.size > 800) {
-                                   bigMessages.push({
-                                       _id: item._id,
-                                       dataURL: item.content.dataURL
-                                   });
-                                   item.content = Object.assign({}, item.content, {
-                                       dataURL: '',
-                                       isLoading: true
-                                   });
-                                   return item;
+                        let imgIds = [];
+                            messages.forEach(item => {
+                               if (item.type === 'img') {
+                                   imgIds.push(item._id);
                                }
-                               return item;
                             });
-                        socket.emit('history', result);
-                        if (bigMessages.length) {
-                            setTimeout(() => {
-                                socket.emit('bigMessages', bigMessages);
-                            }, 1000);
+                        socket.emit('history', messages);
+                        if (imgIds.length) {
+                            ImageModel
+                                .find({
+                                    mainId: {$in: imgIds}
+                                })
+                                .lean()     //убирает парамтры привязки mongoose
+                                .exec((err, messages) => {
+                                    socket.emit('bigMessages',
+                                        messages.map(item => {
+                                            return {
+                                                _id: item.mainId,
+                                                dataURL: item.content.toString()
+                                            }
+                                        })
+                                    );
+                                })
                         }
                     }
                 });
@@ -110,7 +157,7 @@ module.exports = io => {
                     if (Array.isArray(messages) && messages.length) {
                         let ids = messages.map(item => item._id);
                         let apply = function (ids) {
-                            modelUpdate(true,
+                            modelUpdate(MessageModel, true,
                                 {
                                     _id: {$in: ids}
                                 },
@@ -130,6 +177,10 @@ module.exports = io => {
                                             socket.to(room).emit('deleteMsg', ids);
                                         });
                                 });
+                            ImageModel
+                                .find({ mainId: {$in: ids}})
+                                .deleteMany()
+                                .exec();
                         }(ids);
                     }
                 });
@@ -158,7 +209,7 @@ module.exports = io => {
                 return;
             }
             let apply = function (id, sessionId) {
-                modelUpdate(false,
+                modelUpdate(MessageModel, false,
                     {
                         _id: id,
                         sessionId: sessionId
@@ -179,12 +230,16 @@ module.exports = io => {
                                 socket.emit('deleteMsg', [id]);
                                 socket.to(room).emit('deleteMsg', [id]);
                             });
+                        ImageModel
+                            .find({mainId: id})
+                            .deleteOne()
+                            .exec();
                     });
             }(id, sessionId);
         });
 
         function modelUpdateRemoteDate (isMany, condition, params = {}, callback) {
-            modelUpdate(isMany,
+            modelUpdate(MessageModel, isMany,
                 Object.assign({removeDate: null}, condition),
                 { $set: Object.assign({removeDate: new Date()}, params) },
                 () => {
@@ -192,8 +247,8 @@ module.exports = io => {
                 });
         }
 
-        function modelUpdate (isMany, condition = {}, params = {}, callback) {
-            MessageModel[!!isMany ? 'updateMany': 'updateOne'](
+        function modelUpdate (model, isMany, condition = {}, params = {}, callback) {
+            model[!!isMany ? 'updateMany': 'updateOne'](
                 condition,
                 params
             ).exec(err => {
