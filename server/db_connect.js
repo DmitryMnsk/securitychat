@@ -71,7 +71,7 @@ module.exports = mongoose => {
                     type: 'img'
                 }
             )
-            .exec(err, messages => {
+            .exec((err, messages) => {
                 let ids = messages.map(item => item._id);
                 MessageModel
                     .find(
