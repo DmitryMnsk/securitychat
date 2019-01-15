@@ -50,7 +50,12 @@ module.exports = mongoose => {
         let a = new Date();
         a.setMinutes(a.getMinutes() - 10);
         MessageModel
-            .find({removeDate: {$lte: a}})
+            .find(
+                {
+                    removeDate: {$lte: a},
+                    type: {$ne: 'img'}
+                }
+            )
             .deleteMany()
             .exec(err => {
                 if (!err) {
@@ -58,6 +63,34 @@ module.exports = mongoose => {
                 } else {
                     log.addRec(err);
                 }
+            });
+        MessageModel
+            .find(
+                {
+                    removeDate: {$lte: a},
+                    type: 'img'
+                }
+            )
+            .exec(err, messages => {
+                let ids = messages.map(item => item._id);
+                MessageModel
+                    .find(
+                        {
+                            _id: {$in: ids}
+                        }
+                    )
+                    .deleteMany()
+                    .exec(err => {
+                        if (!err) {
+                            log.addRec(`isDeleted records remooved`);
+                        } else {
+                            log.addRec(err);
+                        }
+                    });
+                ImageModel
+                    .find({ mainId: {$in: ids}})
+                    .deleteMany()
+                    .exec();
             });
     }, 60 * 1000);
 };
