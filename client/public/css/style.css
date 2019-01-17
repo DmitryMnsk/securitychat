@@ -480,3 +480,7 @@ label.for-file {
 #isActive.active {
     background-color: rgba(134, 187, 113, 0.4);
 }
+
+li.invisible {
+    opacity: 0.1;
+}

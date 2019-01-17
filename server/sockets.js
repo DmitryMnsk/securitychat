@@ -173,8 +173,8 @@ module.exports = io => {
                                             _id: {$in: ids}
                                         }, {},
                                         () => {
-                                            socket.emit('deleteMsg', ids);
-                                            socket.to(room).emit('deleteMsg', ids);
+                                            socket.emit('deleteMsg', ids, sessionId);
+                                            socket.to(room).emit('deleteMsg', ids, sessionId);
                                         });
                                 });
                             ImageModel

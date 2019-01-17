@@ -51,32 +51,43 @@ $( document ).ready( () => {
         }
     }
 
-    function deleteMsg (ids) {
+    function deleteMsg (ids, sessionId) {
         if (!ids || !ids.length) {
             return;
         }
-        doDeleted(ids);
+        doDeleted(ids, sessionId);
     }
 
-    function doDeleted(ids) {
+    function doDeleted(ids, sessionId) {
+        if (sessionId) {
+            $(".chat-history li").filterByData('sessionId', sessionId).each(function() {
+                doRemoveLi($(this));
+            });
+            return;
+        }
         ids.forEach(id => {
             let li = $(".chat-history li").filterByData('id', id);
             if (li.length) {
-                li.html('<hr/><div class="message my-message" dir="auto">removed</div>');
-                if (li.hasClass('own-message')) {
-                    li.removeClass('own-message');
-                }
-                if (li.next().length && li.next().is('li')) {
-                    let nextLi = li.next();
-                    if (nextLi.find('.message-data-name').length) {
-                        nextLi.find('.message-data-name').show();
-                    }
-                    if (!nextLi.find('hr').length) {
-                        nextLi.prepend('<hr/>');
-                    }
-                }
+                doRemoveLi(li);
             }
         })
+    }
+
+    function doRemoveLi (li) {
+        li.removeData();
+        li.html('<hr/><div class="message my-message" dir="auto">removed</div>');
+        if (li.hasClass('own-message')) {
+            li.removeClass('own-message');
+        }
+        if (li.next().length && li.next().is('li')) {
+            let nextLi = li.next();
+            if (nextLi.find('.message-data-name').length) {
+                nextLi.find('.message-data-name').show();
+            }
+            if (!nextLi.find('hr').length) {
+                nextLi.prepend('<hr/>');
+            }
+        }
     }
 
     function socketConnected (msg) {
@@ -113,6 +124,17 @@ $( document ).ready( () => {
                     location.pathname = '';
                 }, 100);
             }
+
+            let a = new Date();
+            a.setMinutes(a.getMinutes() - 10);
+            $(".chat-history li").filterByData('date').each(function() {
+                let li = $(this),
+                    date = li.data('date');
+                if (date.getTime()<= a.getTime()) {
+                    li.removeData('date');
+                    li.addClass('invisible');
+                }
+            });
         }, 60 * 1000);
     }
 
@@ -148,9 +170,7 @@ $( document ).ready( () => {
     function getTextContentFromMessage (message, showTruth) {
         let result = getContent(message.type, encodeHTML(message.content), showTruth);
         result = result && result.replace && result.replace(/\n/g,'<br/>') || result;
-        if (!!~['http:', 'https:'].indexOf(result.substring(0, result.indexOf('/')))) {
-            result = '<a href="' + result + '" target="_blank">' + result + '</a>';
-        }
+        result = result && result.replace && result.replace(/(https?:\/\/([^\s]+))/g, '<a href="$1" target="_blank">$1</a>') || result;
         return result;
     }
 
@@ -163,6 +183,8 @@ $( document ).ready( () => {
             message.date = getContent('date', $.date(message.date), showTruth);
             message.username = getContent(null, message.username, showTruth);
             htmlData.id = message._id;
+            htmlData.sessionId = message.sessionId;
+            htmlData.date = new Date();
         }
 
         if (message.type) {
@@ -243,7 +265,17 @@ $( document ).ready( () => {
                     el.data('wide', !data.wide);
                 });
             }
+        }
+        html.appendTo('.chat-history ul');
 
+        if (showTruth && !imgId) {
+            html.Emoji({
+                path: 'assets/img/apple72/',
+                class: 'emoji',
+                ext: 'png'
+            });
+        }
+        if (showTruth) {
             let deleteBtn = html.find('.clearTextArea');
             if (deleteBtn.length) {
                 deleteBtn.on('click', function () {
@@ -254,15 +286,6 @@ $( document ).ready( () => {
                     }
                 })
             }
-        }
-        html.appendTo('.chat-history ul');
-
-        if (showTruth && !imgId) {
-            html.Emoji({
-                path: 'assets/img/apple72/',
-                class: 'emoji',
-                ext: 'png'
-            });
         }
 
         // Скроллинг вниз
