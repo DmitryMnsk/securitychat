@@ -20,6 +20,7 @@ $( document ).ready( () => {
 
     socket.on('connected', socketConnected);
     socket.on('connect_error', resetCode);
+    socket.on('setUsersInfo', setUsersInfo);
     // socket.on('disconnect', resetCode);
     socket.on('message', (message, my) => {
         if (!my) {
@@ -164,6 +165,37 @@ $( document ).ready( () => {
 
             }
         })
+    }
+
+    function setUsersInfo (users) {
+        if (users && users.length) {
+            let ids = users.map(user => user.id);
+            $('.chat-users-block span').each(span => {
+                let id = $(this).data('id');
+                if (!~ids.indexOf(id)) {
+                    users.push({
+                        id,
+                        isDelete: true
+                    })
+                }
+            });
+            users.forEach(user => {
+                let span = $('.chat-users-block span').filterByData('id', user.id);
+                if (span.length) {
+                    if (user.isDelete) {
+                        span.remove();
+                    } else {
+                        span[(user.isActive ? 'addClass' : 'removeClass')]('isActive');
+                    }
+                } else {
+                    let span = $('<span class="' + user.isActive && 'isActive' || '' + '"></span>');
+                    span.data({id: user.id});
+                    span.appendTo('.chat-users-block');
+                }
+            });
+        } else {
+            $('.chat-users-block span').remove();
+        }
     }
 
 
@@ -390,6 +422,7 @@ $( document ).ready( () => {
     /*JQuery обработчики*/
 
     function setIsActiveInterval (bool) {
+        debugger
         if (!bool) {
             clearInterval(isActiveInterval);
         } else {
@@ -398,6 +431,7 @@ $( document ).ready( () => {
             }, 30 * 1000);
             emitSetRead();
         }
+        socket.emit('setUsersActive', room, bool);
     }
 
     function emitSetRead () {
@@ -428,8 +462,8 @@ $( document ).ready( () => {
             $('#isActive').removeClass('active');
             isActive = false;
             Cookies.remove('isActive');
-            setIsActiveInterval(false);
         }
+        setIsActiveInterval(!code ? false: $('#isActive').hasClass('active'));
         Cookies.set('codeVal', code);
         getClassForInput(input);
         $('.chat-history li').remove();

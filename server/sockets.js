@@ -9,12 +9,31 @@ module.exports = io => {
 
         //socket.join('all');
         socket.on('join', room => {
+            if (socket.room) {
+                socket.leave(socket.room);
+            }
             socket.room = room;
             socket.join(room);
         });
 
         socket.on('resetAll', room => {
             socket.to(room).emit('resetAllFromOut');
+        });
+
+        socket.on('setUsersActive', (room, isActive) => {
+            socket.isActive = isActive;
+            let sockets = io.sockets.adapter.rooms[room].sockets,
+                result = [];
+            Object.keys(sockets).map((objectKey) => {
+                if (sockets[objectKey]) {
+                    result.push({
+                        id: objectKey,
+                        isActive: !!io.sockets.connected[objectKey].isActive
+                    })
+                }
+            });
+            socket.to(room).emit('setUsersInfo', result);
+            socket.emit('setUsersInfo', result);
         });
 
 

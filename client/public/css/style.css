@@ -484,3 +484,21 @@ label.for-file {
 li.invisible {
     opacity: 0.1;
 }
+
+.chat-users-block {
+    padding-left: 20px;
+}
+
+.chat-users-block span {
+    width: 8px;
+    height: 8px;
+    background-color: yellow;
+    border-radius: 8px;
+    border: 1px solid #dede07;
+    display: inline-block;
+}
+
+.chat-users-block span.isActive {
+    background-color: greenyellow;
+    border: 1px solid #8dd024;
+}
