@@ -168,9 +168,9 @@ $( document ).ready( () => {
     }
 
     function setUsersInfo (users) {
-        if (users && users.length) {
+        if (users && users.length && code) {
             let ids = users.map(user => user.id);
-            $('.chat-users-block span').each(span => {
+            $('.chat-users-block span').each(function () {
                 let id = $(this).data('id');
                 if (!~ids.indexOf(id)) {
                     users.push({
@@ -188,7 +188,7 @@ $( document ).ready( () => {
                         span[(user.isActive ? 'addClass' : 'removeClass')]('isActive');
                     }
                 } else {
-                    let span = $('<span class="' + user.isActive && 'isActive' || '' + '"></span>');
+                    let span = $('<span class="' + (user.isActive && 'isActive' || '') + '"></span>');
                     span.data({id: user.id});
                     span.appendTo('.chat-users-block');
                 }
@@ -422,7 +422,6 @@ $( document ).ready( () => {
     /*JQuery обработчики*/
 
     function setIsActiveInterval (bool) {
-        debugger
         if (!bool) {
             clearInterval(isActiveInterval);
         } else {
@@ -490,6 +489,7 @@ $( document ).ready( () => {
         getClassForInput($("input[name='sccode']"));
         getClassForInput($("input[name='scuser']"));
         $('.chat-history li').remove();
+        $('.chat-users-block span').remove();
         socket.emit('receiveHistory', room);
     }
 

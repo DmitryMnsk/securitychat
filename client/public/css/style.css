@@ -492,6 +492,7 @@ li.invisible {
 .chat-users-block span {
     width: 8px;
     height: 8px;
+    margin: 0 2px;
     background-color: yellow;
     border-radius: 8px;
     border: 1px solid #dede07;

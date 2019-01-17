@@ -22,6 +22,13 @@ module.exports = io => {
 
         socket.on('setUsersActive', (room, isActive) => {
             socket.isActive = isActive;
+            setUserInfo(room);
+        });
+
+        function setUserInfo (room) {
+            if (!room || !io.sockets.adapter.rooms[room]) {
+                return;
+            }
             let sockets = io.sockets.adapter.rooms[room].sockets,
                 result = [];
             Object.keys(sockets).map((objectKey) => {
@@ -34,12 +41,14 @@ module.exports = io => {
             });
             socket.to(room).emit('setUsersInfo', result);
             socket.emit('setUsersInfo', result);
-        });
+        }
 
 
         socket.on('disconnect', () => {
             if (socket.room) {
-                socket.leave(socket.room);
+                let room = socket.room;
+                setUserInfo(room);
+                socket.leave(room);
             }
         });
         /*socket.on('leave', room => {
