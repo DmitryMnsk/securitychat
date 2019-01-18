@@ -185,7 +185,7 @@ function previewFile () {
             for (let i = 0; i < fileField.files.length; i++) {
                 file = files.item(i);
                 var span = $("<div style='display: inline-block'></div>");
-                var as = function (f, s, fn) {
+                function multiload (f, s, fn) {
                     loadOneFile(f, function (evt) {
                         var img = new Image();
                         img.onload = function () {
@@ -199,7 +199,8 @@ function previewFile () {
                         };
                         img.src = _URL.createObjectURL(f);
                     });
-                }(file, span, insertImgInBlock);
+                }
+                multiload(file, span, insertImgInBlock);
             }
             $('#multifiles').show();
         }
@@ -212,3 +213,7 @@ function loadOneFile (file, onloadFunc) {
     reader.onload = onloadFunc || function () {};
     reader.readAsDataURL(file);
 }
+
+$( document ).ready( () => {
+    $('input[type=file]').on('change', previewFile);
+});
