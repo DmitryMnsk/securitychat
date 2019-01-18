@@ -29,7 +29,8 @@ module.exports = app => {
         res.cookie('sessionId', req.session.id);
         res.render('index.html', {
             main: false,
-            date: new Date()
+            date: new Date(),
+            dev: !!~process.argv.indexOf('dev')
         });
     });
 };

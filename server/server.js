@@ -15,11 +15,11 @@ nunjucks.configure(path.join(__dirname, '..', 'client', 'views'), {
     express: app
 });
 
-if (!!~process.argv.indexOf('dev')) {
+if (!~process.argv.indexOf('dev')) {
     compressor.minify({
-        compressor: 'uglifyjs',
-        input: path.join(__dirname, '..', 'client', 'public', 'js', 'common.js'),
-        output: path.join(__dirname, '..', 'client', 'js.js'),
+        compressor: 'babel-minify',
+        input: path.join(__dirname, '..', 'client', 'public', 'js', '*.js'),
+        output: path.join(__dirname, '..', 'client', 'public', 'js.js'),
         callback: function (err, min) {
             startServ();
         }

@@ -61,9 +61,13 @@
                     </div>
                     <span class="close" id="removeAll"></span>
                 </div>
-                <script src="/assets/js/jQueryEmoji.js"></script>
-                <script src="/assets/js/common.js"></script>
-                <script src="/assets/js/auth.js"></script>
+                    {% if dev %}
+                        <script src="/assets/js/jQueryEmoji.js"></script>
+                        <script src="/assets/js/common.js"></script>
+                        <script src="/assets/js/auth.js"></script>
+                    {% else %}
+                        <script src="/assets/js.js"></script>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
