@@ -490,6 +490,7 @@ $( document ).ready( () => {
         getClassForInput($("input[name='scuser']"));
         $('.chat-history li').remove();
         $('.chat-users-block span').remove();
+        setIsActiveInterval(false);
         socket.emit('receiveHistory', room);
     }
 
