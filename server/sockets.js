@@ -20,8 +20,9 @@ module.exports = io => {
             socket.to(room).emit('resetAllFromOut');
         });
 
-        socket.on('setUsersActive', (room, isActive) => {
+        socket.on('setUsersActive', (room, isActive, remoteAddress) => {
             socket.isActive = isActive;
+            socket.remoteAddress = remoteAddress;
             setUserInfo(room);
         });
 
@@ -30,12 +31,15 @@ module.exports = io => {
                 return;
             }
             let sockets = io.sockets.adapter.rooms[room].sockets,
-                result = [];
+                result = [],
+                remoteAddressArr = [];
             Object.keys(sockets).map((objectKey) => {
-                if (sockets[objectKey]) {
+                let socket = io.sockets.connected[objectKey];
+                if (sockets[objectKey] && !~remoteAddressArr.indexOf(socket.remoteAddress)) {
+                    remoteAddressArr.push(socket.remoteAddress);
                     result.push({
                         id: objectKey,
-                        isActive: !!io.sockets.connected[objectKey].isActive
+                        isActive: !!socket.isActive
                     })
                 }
             });
