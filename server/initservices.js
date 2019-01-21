@@ -28,10 +28,13 @@ module.exports = app => {
         //res.sendFile(path.join(__dirname, '..', 'client', 'index.html'))
         res.cookie('sessionId', req.session.id);
         res.cookie('remoteAddress', req.connection.remoteAddress);
-        res.render('index.html', {
-            main: false,
-            date: new Date(),
-            dev: !!~process.argv.indexOf('dev')
+        require('dns').lookup(require('os').hostname(), function (err, add, fam) {
+            res.cookie('remoteAddress', add);
+            res.render('index.html', {
+                main: false,
+                date: new Date(),
+                dev: !!~process.argv.indexOf('dev')
+            });
         });
     });
 };
