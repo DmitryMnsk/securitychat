@@ -3,7 +3,7 @@ $( document ).ready( () => {
         return;
     }
     var room = location.pathname.substr(1),
-        socket = io.connect(),
+        socket,
         code = null,
         userName = null,
         isActive = false,
@@ -12,30 +12,46 @@ $( document ).ready( () => {
         previousMsgUser = null,
         resetTimeout = null,
         inactivityCount = 0,
-        inactivityCountMax = 2;
+        inactivityCountMax = 2,
+        ip;
+
+    window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;//compatibility for Firefox and chrome
+    var pc = new RTCPeerConnection({iceServers:[]}), noop = function(){};
+    pc.createDataChannel('');//create a bogus data channel
+    pc.createOffer(pc.setLocalDescription.bind(pc), noop);// create offer and set local description
+    pc.onicecandidate = function(ice)
+    {
+        if (ice && ice.candidate && ice.candidate.candidate)
+        {
+            ip = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate)[1];
+            pc.onicecandidate = noop;
+            socket = io.connect();
+            /*Работа с сокетами*/
+
+            socket.on('connected', socketConnected);
+            socket.on('connect_error', resetCode);
+            socket.on('setUsersInfo', setUsersInfo);
+            // socket.on('disconnect', resetCode);
+            socket.on('message', (message, my) => {
+                if (!my) {
+                    $.changeFavicon('./assets/icons/new.png')
+                }
+                if (!code) {
+                    return;
+                }
+                addMessage(message, true);
+            });
+            socket.on('history', socketHistory);
+            socket.on('bigMessages', socketBigMessages);
+
+            socket.on('deleteMsg', deleteMsg);
+            socket.on('resetAllFromOut', resetAllFromOut);
+
+        }
+    };
 
     document.title = `${room}/Marketing target	Smartphones`;
 
-    /*Работа с сокетами*/
-
-    socket.on('connected', socketConnected);
-    socket.on('connect_error', resetCode);
-    socket.on('setUsersInfo', setUsersInfo);
-    // socket.on('disconnect', resetCode);
-    socket.on('message', (message, my) => {
-        if (!my) {
-            $.changeFavicon('./assets/icons/new.png')
-        }
-        if (!code) {
-            return;
-        }
-        addMessage(message, true);
-    });
-    socket.on('history', socketHistory);
-    socket.on('bigMessages', socketBigMessages);
-
-    socket.on('deleteMsg', deleteMsg);
-    socket.on('resetAllFromOut', resetAllFromOut);
 
 
     function resetAllFromOut () {
@@ -430,8 +446,7 @@ $( document ).ready( () => {
             }, 30 * 1000);
             emitSetRead();
         }
-        //socket.emit('setUsersActive', room, bool, Cookies.get('remoteAddress'));
-        socket.emit('setUsersActive', room, bool);
+        socket.emit('setUsersActive', room, bool, Cookies.get('remoteAddress') + ip);
     }
 
     function emitSetRead () {
