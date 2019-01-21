@@ -430,7 +430,8 @@ $( document ).ready( () => {
             }, 30 * 1000);
             emitSetRead();
         }
-        socket.emit('setUsersActive', room, bool, Cookies.get('remoteAddress'));
+        //socket.emit('setUsersActive', room, bool, Cookies.get('remoteAddress'));
+        socket.emit('setUsersActive', room, bool);
     }
 
     function emitSetRead () {

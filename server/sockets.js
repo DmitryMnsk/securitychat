@@ -22,7 +22,7 @@ module.exports = io => {
 
         socket.on('setUsersActive', (room, isActive, remoteAddress) => {
             socket.isActive = isActive;
-            socket.remoteAddress = remoteAddress;
+            //socket.remoteAddress = remoteAddress;
             setUserInfo(room);
         });
 
@@ -35,8 +35,9 @@ module.exports = io => {
                 remoteAddressArr = [];
             Object.keys(sockets).map((objectKey) => {
                 let socket = io.sockets.connected[objectKey];
-                if (sockets[objectKey] && !~remoteAddressArr.indexOf(socket.remoteAddress)) {
-                    remoteAddressArr.push(socket.remoteAddress);
+                //if (sockets[objectKey] && !~remoteAddressArr.indexOf(socket.remoteAddress)) {
+                if (sockets[objectKey]) {
+                    //remoteAddressArr.push(socket.remoteAddress);
                     result.push({
                         id: objectKey,
                         isActive: !!socket.isActive

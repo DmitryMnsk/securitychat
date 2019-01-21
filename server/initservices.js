@@ -27,7 +27,12 @@ module.exports = app => {
     app.get('/*', (req, res) => {
         //res.sendFile(path.join(__dirname, '..', 'client', 'index.html'))
         res.cookie('sessionId', req.session.id);
-        res.cookie('remoteAddress', req.connection.remoteAddress);
+        res.render('index.html', {
+            main: false,
+            date: new Date(),
+            dev: !!~process.argv.indexOf('dev')
+        });
+       /* res.cookie('remoteAddress', req.connection.remoteAddress);
         require('dns').lookup(require('os').hostname(), function (err, add, fam) {
             res.cookie('remoteAddress', add);
             res.render('index.html', {
@@ -35,6 +40,6 @@ module.exports = app => {
                 date: new Date(),
                 dev: !!~process.argv.indexOf('dev')
             });
-        });
+        });*/
     });
 };
